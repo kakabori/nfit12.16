@@ -99,8 +99,11 @@ pack $w.inte $w.li $w.ypos $w.ly $w.xpos $w.lx -side right
 
 set w .butt
 frame $w
-checkbutton $w.b1 -indicatoron 0 -bitmap @bmp/box.bmp -borderwidth 3 -variable editmode \
-                  -command {editbox}
+
+checkbutton $w.b1 -indicatoron 0 -bitmap @bmp/box.bmp -borderwidth 3 \
+            -variable editmode -command {editbox}
+
+
 $w.b1 configure -selectcolor [$w.b1 cget -background]
 pack $w.b1 -side top
 
@@ -350,8 +353,7 @@ proc Open {tree {automate 0} {name ""} } {
         incr nodeMax
         set node [$tree insert root -label $name -data "filedir $directory load 1 plot 1 note --"]
         set iname [file rootname [$tree label $node]]
-        set fname [file join [$tree get $node filedir] [$tree label $node]]
-        puts "test2"        
+        set fname [file join [$tree get $node filedir] [$tree label $node]]      
         puts "img load $iname $fname"
         treeshow $tree $node
       } else {
@@ -1014,5 +1016,4 @@ source tcl/kiyo.tcl
 source tcl/fittingWindow.tcl
 source tcl/fileManage.tcl
 source tcl/procedures.tcl
-
 
