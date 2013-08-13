@@ -10,10 +10,14 @@ ODIR = obj
 SDIR = src
 IDIR = inc
 
+TCL = tcl8.4
+TK = tk8.4
+BLT = BLT
+
 CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread -g
-CLINK = -lm -ltcl8.4 -ltk8.4 -ltiff -lBLT24 -lpthread -lmydll \
+CLINK = -lm -l$(TCL) -l$(TK) -ltiff -l$(BLT) -lpthread -lmydll \
         -lgsl -lgslcblas -Wl,-rpath,.
-CPATH = -I/usr/include/tcl8.4 -I./$(IDIR) -L. -I.
+CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I.
 
 all: libtoad toad
 
