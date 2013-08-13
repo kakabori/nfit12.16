@@ -64,10 +64,13 @@ void StrFct(ModelCalculator& mc, double qz)
 	mc.QxSlice(0.00, 0.3);
 	vector<double> qvec, sfvec;
 	mc.get_spStrFctPoints(qvec, sfvec);
-	cout << qvec.size() << endl;
+	
 	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
 		cout << exp(qvec[i]) - SMALLNUM << " " << exp(sfvec[i]) << endl;
 	}
+	cout << "===========================" << endl;
+	cout << "qz: " << qz << endl;
+	cout << "# of points calculated: " << qvec.size() << endl;
 }
 
 void CCD(ModelCalculator& mc, double qz)
@@ -83,10 +86,14 @@ void CCD(ModelCalculator& mc, double qz)
 
 int main()
 {
-	//double t; int n;
-	Utable utab;
-	utab.writeUtableFile("utab_nfit12.15.dat", 600, 2000);
-	utab.readUtableFile("utab_nfit12.15.dat");
+
+	
+	// Run the following three lines to create a new utable and test it
+	//Utable utab;
+	//utab.writeUtableFile("utab_nfit12.15.dat", 600, 2000);
+	//utab.readUtableFile("utab_nfit12.15.dat");
+	
+  //double t; int n;
 	//cout << "Enter n and t: ";
 	//while (cin >> n >> t) {
 	//	cout << utab.interp_utable(n, t) << " "
@@ -94,7 +101,7 @@ int main()
 	//}
 	
 	ModelCalculator mc;
-	mc.read_in_utable("utab_nfit12.15.dat");
+	mc.read_in_utable("../dat/utab_nfit12.15.dat");
 	  
 	mc.setModelParameter(5.6212e-13, "Kc");
 	mc.setModelParameter(4.82716e13, "B");

@@ -19,6 +19,7 @@ using std::setw; using std::showpoint; using std::noshowpoint;
 #define SMALLNUM 0.000001
 #define PI 3.1415926535897932384626433832795
 
+
 Utable::Utable()
 {
   //Turn off the error handler in gsl_integration_qag
@@ -26,12 +27,14 @@ Utable::Utable()
 	workspace = gsl_integration_workspace_alloc(WORKSPACE_SIZE);
 }
 
+
 /* Called by the destructor */
 void Utable::cleanup()
 {
 	gsl_integration_workspace_free(workspace);
 	cleanup_splines_accs();
 }
+
 
 /* Cleans up the two vectors, splines and accs */
 void Utable::cleanup_splines_accs()
@@ -48,6 +51,7 @@ void Utable::cleanup_splines_accs()
 	}
 	accs.clear();
 }
+
 
 /******************************************************************************
 This function calculates the integration for the height difference function.
@@ -79,11 +83,13 @@ double Utable::calculateIntegration(int n, double t)
   return result;
 }
 
+
 double Utable::s_integrandWrapper(double x, void *param)
 {
 	Utable *p = (Utable *)param;
   return p->integrand(x);
 }
+
 
 double Utable::integrand(double x)
 {
@@ -94,6 +100,7 @@ double Utable::integrand(double x)
 	ret = ret / x / sqrt(1 + x * x);
 	return ret;
 }
+
 
 /******************************************************************************
 writeUtableFile calculates the integration defined inside 
@@ -118,6 +125,7 @@ void Utable::writeUtableFile(const string& filename,
 {
 	writeUtableFile(filename.c_str(), log10t_numSteps, nmax);             
 }
+
 
 void Utable::writeUtableFile(const char *filename,
                              int log10t_numSteps = 600, int nmax = 1000)
@@ -155,6 +163,7 @@ void Utable::writeUtableFile(const char *filename,
 	myfile.close();
 }
 
+
 void Utable::save_t(ofstream& myfile, const vector<double>& x)
 {
 	typedef vector<double>::size_type sz;
@@ -162,6 +171,7 @@ void Utable::save_t(ofstream& myfile, const vector<double>& x)
 	// save the last element in x without a trailing white space
 	myfile << setw(14) << x[x.size()-1] << endl;
 }
+
 
 void Utable::save_integration(ofstream& myfile, 
                               const vector<double>& x, int nmax)
@@ -183,6 +193,7 @@ void Utable::save_integration(ofstream& myfile,
 	       << noshowpoint;
 }
 
+
 /* Decide whether to do the integration or use the Caille approx. */
 double Utable::getIntegration(int n, double t)
 {
@@ -201,6 +212,7 @@ double Utable::getIntegration(int n, double t)
 	}
 }
 
+
 /* approximation in Ning Lei's thesis, Eq. 2.4.87 */
 double Utable::cailleApprox(int n, double t)
 {
@@ -209,6 +221,7 @@ double Utable::cailleApprox(int n, double t)
 	double ret = 2 * 0.5772156649 + log(t2);
 	return n == 0 ? ret : ret + expIntegral(t2 / 4 / n);
 }
+
 
 /******************************************************************************
 readUtableFile reads an ASCII formatted file for the table of
@@ -228,6 +241,8 @@ void Utable::readUtableFile(const string& filename)
 {
 	readUtableFile(filename.c_str());
 }
+
+
 
 void Utable::readUtableFile(const char *filename) 
 {
@@ -290,6 +305,7 @@ void Utable::readUtableFile(const char *filename)
 	myfile.close();
 }
 
+
 /******************************************************************************
 This function returns the height difference function evaluated at 
 the input n and r, given the input lambda, eta, and D.
@@ -337,6 +353,7 @@ double Utable::getHeightDiffFunc(int n, double r, double lambda,
 	return ret * eta * D * D / 2 / PI / PI;
 }
 
+
 double Utable::interp_utable(int n, double t)
 {
 	int ex = 0;
@@ -352,11 +369,13 @@ double Utable::interp_utable(int n, double t)
 	                         utab[i+ex+2+n*jump]);
 }
 
+
 double Utable::gsl_interp_utable(int n, double t)
 {
 	double log10t = log10(t + SMALLNUM);
 	return gsl_spline_eval(splines[n], log10t, accs[n]);
 }
+
 
 /******************************************************************************
 zeroth order Bessel function of the first kind, 
@@ -387,6 +406,7 @@ double bessel_J0(double x)
 	return ans;
 }
 
+
 /******************************************************************************
 Returns the exponential integral. Use GSL special function.
 ******************************************************************************/
@@ -396,6 +416,7 @@ double expIntegral(double x)
 	// for x > 700, gsl_sf_expint_E1 results in underflow error
 	return (x > 0 && x < 700) ? gsl_sf_expint_E1(x) : 0;
 }
+
 
 /* 2nd order Newton's divided difference interpolation formula */
 double interp_Newton_2nd(double t, 
@@ -407,6 +428,7 @@ double interp_Newton_2nd(double t,
 	double P012 = (P12 - P01) / (t2 - t0);
 	return P0 + (t-t0)*P01 + (t-t0)*(t-t1)*P012;
 }
+
 
 /* 3rd order Newton's divided difference interpolation formula */
 double interp_Newton_3rd(double t, 
