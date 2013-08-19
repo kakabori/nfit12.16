@@ -23,6 +23,7 @@ double bessel_J0(double x);
 double getLowerLimit(double, double, double);
 double getUpperLimit(double, double, double);
 enum Var stringToVarEnum(const std::string &);
+void saveDoubleColumns(std::vector<double>&, std::vector<double>&, const char *);
 
 /****************************************************************************************
 ModelCalculator class: 
@@ -70,6 +71,9 @@ public:
 	double beamConvolutedStrFct(double);
 	static double s_convIntegrand(double, void *);
 	double beamProfile(double);
+	double convolveMosaic(double);
+	static double s_mosaicIntegrandWrapper(double, void *);
+	double mosaicDist(double);
   
   // a bunch of functions that are useful in debugging
   void get_spStrFctPoints(std::vector<double>&, std::vector<double>&);

@@ -250,8 +250,8 @@ double ModelCalculator::convolveMosaic(double qr)
   gsl_function F;
   F.function = &s_mosaicIntegrandWrapper;
   F.params = this;
-  double lowerLimit = 0;
-  double upperLimit = ;
+  double lowerLimit = qr - 0.01;
+  double upperLimit = qr + 0.01;
   gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
   return result;
@@ -261,7 +261,8 @@ double ModelCalculator::convolveMosaic(double qr)
 double ModelCalculator::s_mosaicIntegrandWrapper(double q, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
-	return exp(p->spStrFct.val(log(q+SMALLNUM))) * p->mosaicDist(p->currQr-q);
+	return exp(p->spStrFct.val(log(fabs(q)+SMALLNUM))) * 
+	       p->mosaicDist(p->currQr-q);
 }
 
 
@@ -269,9 +270,9 @@ double ModelCalculator::s_mosaicIntegrandWrapper(double q, void *ptr)
 Mosaic spread distribution. Mosaic angle is approximated by qr/qz, which is
 good for small angle.
 ******************************************************************************/
-double ModelCalculator::mosaicDist(r)
+double ModelCalculator::mosaicDist(double qr)
 {
-  return mosaic / (r*r + mosaic*mosaic);
+  return 2 * mosaic / PI / (4*qr*qr + mosaic*mosaic);
 }
 
 
@@ -454,7 +455,7 @@ double getLowerLimit(double qx, double qz, double wavelength)
 {
 	double theta = 0.5 * asin(sqrt(qx*qx+qz*qz)*wavelength/2/PI);
 	return -sqrt((4*PI*sin(theta)/wavelength)*(4*PI*sin(theta)/wavelength) -
-	             qx*qx -qz qz);
+	             qx*qx -qz*qz);
 }
 
 
@@ -627,7 +628,8 @@ void ModelCalculator::getRotatedSF(double qxlow, double qxhigh, double _qz, vect
 }
 
 
-void ModelCalculator::getStrFct(double qrlow, double qrhigh, double _qz, vector<double>& qrvec, vector<double>& sf)
+void ModelCalculator::getStrFct(double qrlow, double qrhigh, double _qz, 
+                                vector<double>& qrvec, vector<double>& sf)
 {
 	if (qrlow < 0 || qrhigh < 0)
 		throw domain_error("qrlow and qrhigh must both take positive values");
@@ -664,11 +666,14 @@ void ModelCalculator::getHr(double rlow, double rhigh, vector<double>& rvec, vec
 }
 
 
-void saveDoubleColumns(vector<double>& xvec, vector<double>& yvec, const char *filename)
+void saveDoubleColumns(vector<double>& xvec, vector<double>& yvec, 
+                       const char *filename)
 {
-  cout << "xvec.size(): " << xvec.size() << " yvec.size(): " << yvec.size() << endl;
+  cout << "xvec.size(): " << xvec.size() << " yvec.size(): " << yvec.size() 
+       << endl;
   if (xvec.size() != yvec.size()) {
-    cerr << "\nThe size of input vectors must be identical for saveDoubleColumns function to work\n" << endl;
+    cerr << "\nThe size of input vectors must be identical for " 
+         << "saveDoubleColumns function to work\n" << endl;
     return;
   }
   ofstream myfile;

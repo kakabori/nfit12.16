@@ -10,6 +10,7 @@ using namespace std;
 #define PI 3.1415926535897932384626433832795
 #define SMALLNUM 0.00000000001
 
+
 void spsumn(ModelCalculator& mc, double qz)
 {
 	mc.setSliceParameter(qz);
@@ -29,6 +30,7 @@ void spsumn(ModelCalculator& mc, double qz)
 	}
 	cout << count << endl;
 }
+
 
 void rotated(ModelCalculator& mc, double qz)
 {
@@ -58,9 +60,27 @@ void rotated(ModelCalculator& mc, double qz)
 
 }
 
-void StrFct(ModelCalculator& mc, double qz)
+
+void testMosaic()
 {
-	mc.setSliceParameter(qz);
+	ModelCalculator mc;
+	mc.read_in_utable("../dat/utab_nfit12.15.dat");
+	
+	// Do not change the following parameters
+	mc.setModelParameter(6e-13, "Kc");
+	mc.setModelParameter(2e13, "B");
+	mc.setModelParameter(62.8, "D");
+	mc.setModelParameter(37, "T");
+	mc.setModelParameter(5000, "Lr");
+	mc.setModelParameter(10, "Mz");
+	mc.setModelParameter(0.0134, "edisp");
+	mc.setModelParameter(0.1, "mosaic");
+	mc.setModelParameter(1.175, "wavelength");
+	mc.setModelParameter(0.07113, "pixelSize");
+	mc.setModelParameter(2.3, "bFWHM");
+	mc.setModelParameter(360, "s");
+
+	mc.setSliceParameter(0.3);
 	mc.QxSlice(0.00, 0.3);
 	vector<double> qvec, sfvec;
 	mc.get_spStrFctPoints(qvec, sfvec);
@@ -69,9 +89,41 @@ void StrFct(ModelCalculator& mc, double qz)
 		cout << exp(qvec[i]) - SMALLNUM << " " << exp(sfvec[i]) << endl;
 	}
 	cout << "===========================" << endl;
-	cout << "qz: " << qz << endl;
+	cout << "qz: " << 0.3 << endl;
 	cout << "# of points calculated: " << qvec.size() << endl;
 }
+
+
+void testStrFct()
+{
+	ModelCalculator mc;
+	mc.read_in_utable("../dat/utab_nfit12.15.dat");
+	  
+	mc.setModelParameter(6e-13, "Kc");
+	mc.setModelParameter(2e13, "B");
+	mc.setModelParameter(62.8, "D");
+	mc.setModelParameter(37, "T");
+	mc.setModelParameter(5000, "Lr");
+	mc.setModelParameter(10, "Mz");
+	mc.setModelParameter(0.0134, "edisp");
+	mc.setModelParameter(0, "mosaic");
+	mc.setModelParameter(1.175, "wavelength");
+	mc.setModelParameter(0.07113, "pixelSize");
+	mc.setModelParameter(2.3, "bFWHM");
+	mc.setModelParameter(360, "s");
+
+	vector<double> qvec, sfvec;
+	mc.getStrFct(0, 0.3, 0.2, qvec, sfvec);
+	
+	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
+		cout << qvec[i] << " " << sfvec[i] << endl;
+	}
+	cout << "===========================" << endl;
+	cout << "qz: " << 0.3 << endl;
+	cout << "# of points calculated: " << qvec.size() << endl;
+	saveDoubleColumns(qvec, sfvec, "test_struct_factor.dat");
+}
+
 
 void CCD(ModelCalculator& mc, double qz)
 {
@@ -84,50 +136,19 @@ void CCD(ModelCalculator& mc, double qz)
 	}
 }
 
+
+// Run to create a new utable and test it
+void testUtable()
+{
+	Utable utab;
+	utab.writeUtableFile("utab_nfit12.15.dat", 600, 2000);
+	utab.readUtableFile("utab_nfit12.15.dat");
+}
+
+
 int main()
 {
-
-	
-	// Run the following three lines to create a new utable and test it
-	//Utable utab;
-	//utab.writeUtableFile("utab_nfit12.15.dat", 600, 2000);
-	//utab.readUtableFile("utab_nfit12.15.dat");
-	
-  //double t; int n;
-	//cout << "Enter n and t: ";
-	//while (cin >> n >> t) {
-	//	cout << utab.interp_utable(n, t) << " "
-	//	     << utab.gsl_interp_utable(n, t) << endl;
-	//}
-	
-	ModelCalculator mc;
-	mc.read_in_utable("../dat/utab_nfit12.15.dat");
-	  
-	mc.setModelParameter(5.6212e-13, "Kc");
-	mc.setModelParameter(4.82716e13, "B");
-	mc.setModelParameter(60.519, "D");
-	mc.setModelParameter(37, "T");
-	mc.setModelParameter(10000, "Lr");
-	mc.setModelParameter(6.35298, "Mz");
-	mc.setModelParameter(0.0134, "edisp");
-	mc.setModelParameter(0, "mosaic");
-	mc.setModelParameter(1.175, "wavelength");
-	mc.setModelParameter(0.07113, "pixelSize");
-	mc.setModelParameter(2.3, "bFWHM");
-	mc.setModelParameter(359.3, "s");
-
-	//double qz = 0.534023;
-	double qz = 0.5;
-	//CCD(mc, qz);
-
-	StrFct(mc, qz);
-	//rotated(mc, qz);
-	//spsumn(mc, qz);	
-	//spHr(mc);
-	//bessel();
-	//create2DMap(mc);
-	//cout << getLowerLimit(0.1, 0.415, 1.175) << endl;
-	//cout << getUpperLimit(0.1, 0.415, 1.175) << endl;
+  testStrFct();
 
 	return 0;
 }
