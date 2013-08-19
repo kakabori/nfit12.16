@@ -2,3 +2,6 @@ bmp/
 dat/
 frm.dat
 toad
+createBesselTable/
+mock/
+mydll/test/

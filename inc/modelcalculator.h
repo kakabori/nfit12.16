@@ -54,6 +54,9 @@ public:
   void setSliceParameter(double qz);
   void QxSlice(double qxlow, double qxhigh);
   double getCCDStrFct(double);
+  void buildInterpForRotatedStrFct(double, double);
+  void buildInterpForMosaicStrFct(double, double);
+  void buildInterpForStrFct(double, double);
 
 	// core functions that calculate the structure factor
 	static double s_rotatedWrapper(double, void *);
@@ -74,6 +77,8 @@ public:
 	double convolveMosaic(double);
 	static double s_mosaicIntegrandWrapper(double, void *);
 	double mosaicDist(double);
+	static double s_convolveMosaicWrapper(double, void *);
+	double getMosaicStrFct(double);
   
   // a bunch of functions that are useful in debugging
   void get_spStrFctPoints(std::vector<double>&, std::vector<double>&);
@@ -83,7 +88,9 @@ public:
   void getStrFct(double, double, double, std::vector<double>&, std::vector<double>&);
   void getSumn(double, double, double, std::vector<double>&, std::vector<double>&);
   void getHr(double, double, std::vector<double>&, std::vector<double>&);
-  void getRotatedSF(double, double, double, std::vector<double>&, std::vector<double>&);
+  void getRotatedStrFct(double, double, double, std::vector<double>&, std::vector<double>&);
+  void getMosaicStrFct(double, double, double, std::vector<double>&, std::vector<double>&);
+  void getCCDStrFct(double, double, double, std::vector<double>&, std::vector<double>&);
 private:
   double Kc, B, dspacing, T;
   double avgLr, avgMz;
@@ -98,7 +105,7 @@ private:
 	// qz value for the qx slice
 	double qz;
   // qx lower and upper limits for CCD structure factor interpolant
-  double qxHighLimit, qxLowLimit;
+  double qrUpperLimit;
   // gsl workspace
   gsl_integration_workspace *workspace;
   // interpolation support object for sum over n
@@ -109,6 +116,9 @@ private:
   FunSupport spHr;
 	// interpolation support object for rotated structure factor
   FunSupport spRotated;
+  // interpolation support object for mosaic convoluted structure factor
+  FunSupport spMosaic;
+  
   Utable utable;
   double curr_r, currQr, currQx, currQy;
 	// should be called after parameters are changed. considered as updater
@@ -116,6 +126,7 @@ private:
   void avgMzChanged();
   void KcBDTChanged();
   void set_beamSigma();
+  void set_mosaic(double);
 };
 
 #endif
