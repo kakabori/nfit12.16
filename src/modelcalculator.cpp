@@ -131,8 +131,8 @@ because qr >= qx for any value of qy.
 ******************************************************************************/
 void ModelCalculator::buildInterpForRotatedStrFct(double qxlow, double qxhigh)
 {
-  double qy = max(getLowerLimit(qxhigh, qz, wavelength), 
-                  getUpperLimit(qxhigh, qz, wavelength));
+  double qy = max(fabs(getLowerLimit(qxhigh, qz, wavelength)), 
+                  fabs(getUpperLimit(qxhigh, qz, wavelength)));
   double qrhigh = sqrt(qxhigh*qxhigh + qy*qy);
   buildInterpForMosaicStrFct(qxlow, qrhigh);
   spRotated.findPoints( log(qxlow+SMALLNUM), log(qxhigh+SMALLNUM) );
@@ -141,7 +141,7 @@ void ModelCalculator::buildInterpForRotatedStrFct(double qxlow, double qxhigh)
 
 void ModelCalculator::buildInterpForMosaicStrFct(double qrlow, double qrhigh)
 {
-  buildInterpForStrFct(0, qrhigh+0.1);
+  buildInterpForStrFct(0, qrhigh+0.101);
   qrUpperLimit = qrhigh + 0.1;
   spMosaic.findPoints( log(qrlow+SMALLNUM), log(qrhigh+SMALLNUM) );
 }
@@ -182,7 +182,7 @@ double ModelCalculator::beamConvolutedStrFct(double qx)
   F.function = &s_convIntegrand;
   F.params = this;
   // set integration limits
-  double lowerLimit = max(0.0, qx - 10*beamSigma);
+  double lowerLimit = qx - 10*beamSigma;
   double upperLimit = qx + 10*beamSigma;
   gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
@@ -220,8 +220,7 @@ value that represents zero in doulbe precision floating point.
 double ModelCalculator::s_rotatedWrapper(double logqx, void *ptr)
 {
 	ModelCalculator *p = (ModelCalculator *)ptr;
-	double tmpQx = exp(logqx) - SMALLNUM;
-	tmpQx = fabs(tmpQx);
+	double tmpQx = fabs(exp(logqx) - SMALLNUM);
 	return log(p->rotated(tmpQx));
 }
 

@@ -31,7 +31,7 @@ void testCCDStrFct()
 	mc.setModelParameter(360, "s");
 	
 	vector<double> qvec, sfvec;
-	mc.getCCDStrFct(0, 0.1, 0.2, qvec, sfvec);
+	mc.getCCDStrFct(0, 0.2, 0.2, qvec, sfvec);
 	
 	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
 		cout << qvec[i] << " " << sfvec[i] << endl;
@@ -63,7 +63,7 @@ void testRotatedStrFct()
 	mc.setModelParameter(360, "s");
 	
 	vector<double> qvec, sfvec;
-	mc.getRotatedStrFct(0, 0.1, 0.2, qvec, sfvec);
+	mc.getRotatedStrFct(0, 0.2, 0.2, qvec, sfvec);
 	
 	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
 		cout << qvec[i] << " " << sfvec[i] << endl;
@@ -95,7 +95,7 @@ void testMosaicStrFct()
 	mc.setModelParameter(360, "s");
 
 	vector<double> qvec, sfvec;
-	mc.getMosaicStrFct(0, 0.1, 0.2, qvec, sfvec);
+	mc.getMosaicStrFct(0, 0.2, 0.2, qvec, sfvec);
 	
 	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
 		cout << qvec[i] << " " << sfvec[i] << endl;
@@ -126,7 +126,7 @@ void testStrFct()
 	mc.setModelParameter(360, "s");
 
 	vector<double> qvec, sfvec;
-	mc.getStrFct(0, 0.1, 0.2, qvec, sfvec);
+	mc.getStrFct(0, 0.2, 0.2, qvec, sfvec);
 	
 	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
 		cout << qvec[i] << " " << sfvec[i] << endl;
@@ -152,7 +152,7 @@ int main()
   testStrFct();
   testMosaicStrFct();
   testRotatedStrFct();
-  //testCCDStrFct();
+  testCCDStrFct();
 
 	return 0;
 }
