@@ -54,6 +54,7 @@ public:
   void setSliceParameter(double qz);
   void QxSlice(double qxlow, double qxhigh);
   double getCCDStrFct(double);
+  void buildCCDStrFct(double, double);
   void buildInterpForRotatedStrFct(double, double);
   void buildInterpForMosaicStrFct(double, double);
   void buildInterpForStrFct(double, double);
@@ -100,8 +101,6 @@ private:
 
   // cutoff for r integration and sum over n
   double cutoff_r, cutoff_n;
-  // scaling constants necessary to get value from Utable
-  double in, out;
 	// qz value for the qx slice
 	double qz;
   // qx lower and upper limits for CCD structure factor interpolant
@@ -127,6 +126,9 @@ private:
   void KcBDTChanged();
   void set_beamSigma();
   void set_mosaic(double);
+  
+  // new addition to deal with mosaic spread ring
+  double qrMax; qzMax;
 };
 
 #endif

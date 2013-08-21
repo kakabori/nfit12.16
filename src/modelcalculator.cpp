@@ -110,14 +110,41 @@ void ModelCalculator::resetTOL()
 }
 
 
+void buildCCDStrFct(double _qxMax, double _qzMax);
+{
+  double qxMax = _qxMax + 20*beamSigma;
+  qMax = getqMax(qxMax, _qzMax);
+  double qzStepSize = 0.001;
+  buildqrqzStrFct(qMax, qzStepSize);
+  buildInterpForMosaicStrFct();
+  
+
+}
+
+
+void ModelCalculator::getqMax(double qxMax, double qzMax)
+{
+  double qy = max(fabs(getLowerLimit(qxMax, qzMax, wavelength)), 
+                  fabs(getUpperLimit(qxMax, qzMax, wavelength)));
+  double qrMax = sqrt(qxMax*qxMax + qy*qy);
+  return max(qrMax, qzMax);
+}
+
+
+void ModelCalculator::buildqrqzStrFct(double qMax, double qzStepSize)
+{
+  //somehow build 2D interpolant using ALGlib
+}
+
+
 /******************************************************************************
 Initiate building the interpolants for the pure structure factor, mosaic-
 convolved structure factor, and rotated structure factor.
 ******************************************************************************/
-void ModelCalculator::QxSlice(double qxlow, double qxhigh)
+void ModelCalculator::qrSlice(double qrMax, double qz)
 {
-	if (qxlow < 0 || qxhigh < 0)
-		throw domain_error("ERROR: qxlow and qxhigh must both take positive values");
+	if (qrMax < 0 || qz < 0)
+		throw domain_error("ERROR: qrMax and qz must both take positive values");
   buildInterpForRotatedStrFct(0, qxhigh + 20*beamSigma);
 }
 
@@ -274,7 +301,8 @@ double ModelCalculator::getMosaicStrFct(double qr)
 {
   // Takes the absolute value of qr to avoid a very small negative value 
   // representing zero
-  if (mosaic > 0.001) {
+  const double negligible_mosaic = 0.001 * PI / 180;
+  if (mosaic > negligible_mosaic) {
     return exp(spMosaic.val(log(fabs(qr)+SMALLNUM)));
   } else {
     return exp(spStrFct.val(log(fabs(qr)+SMALLNUM)));
