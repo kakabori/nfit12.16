@@ -1,8 +1,15 @@
+/* 
+ * CCD structure factor is in (qx, qz) space, map calculated slice by slice
+ * rotated structure factor is in (qx, qz) space, map calculated slice by slice
+ * mosaic-convolved structure factor is in (q, theta) space, full 2D map
+ * pure structure factor is in (qr, qz) space, full 2D map
+ */
+
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_bessel.h>
-//#include "alglib/src/stdafx.h"
-//#include "alglib/src/interpolation.h"
+#include "alglib/src/stdafx.h"
+#include "alglib/src/interpolation.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -18,13 +25,19 @@ using std::istringstream;
 using std::vector; using std::cout; using std::endl;
 using std::cerr;
 
-//using namespace alglib;
+using namespace alglib;
 
 #define PI 3.1415926535897932384626433832795
 #define SMALLNUM 0.00000000001
 #define WORKSPACE_SIZE 10000
 #define KEY 6
 #define ARB_SCALE 100000
+const double NEGLIGIBLE_MOSAIC = 0.001 * PI / 180; // in radian 
+const double NEGLIGIBLE_BEAM_SIZE = 0.1; // in pixel
+const double QMIN = 0.02; // in invrse-Angstrom
+const double QSTEP = 0.001;
+const double THETAMAX = PI / 3; 
+const double THETASTEP = 0.1 * PI / 180; // in radian
 
 ModelCalculator::ModelCalculator()
 {
@@ -36,9 +49,9 @@ ModelCalculator::ModelCalculator()
   //Interpolation support functions
   spsumn.init(s_sumnWrapper, this);
   spHr.init(s_HrWrapper, this);
-  algStrFct.init(s_StrFctWrapper, this);
-  algRotated.init(s_rotatedWrapper, this);
-  algMosaic.init(s_convolveMosaicWrapper, this);
+  spStrFct.init(s_StrFctWrapper, this);
+  spRotated.init(s_rotatedWrapper, this);
+  algMosaic.initialize(s_convolveMosaicWrapper, this);
   resetTOL();
 }
 
@@ -75,15 +88,14 @@ ModelCalculator::ModelCalculator(const ModelCalculator& mc)
 
   spsumn.init(s_sumnWrapper, this);
   spHr.init(s_HrWrapper, this);
-  algStrFct.init(s_StrFctWrapper, this);
-  algRotated.init(s_rotatedWrapper, this);
-  algMosaic.init(s_convolveMosaicWrapper, this);
+  spStrFct.init(s_StrFctWrapper, this);
+  spRotated.init(s_rotatedWrapper, this);
+  algMosaic.initialize(s_convolveMosaicWrapper, this);
   resetTOL();
 
 	// call the updaters
 	avgLrChanged();
 	avgMzChanged();
-	KcBDTChanged();
 	set_beamSigma();
 }
 
@@ -102,38 +114,78 @@ set tolerance for interpolation
 *******************************************************************************/
 void ModelCalculator::resetTOL()
 {
+  spStrFct.setol(g_spStrFctAbserr, g_spStrFctRelerr, g_spStrFctMindx, g_spStrFctMaxdx);
   spsumn.setol(g_spsumnAbserr, g_spsumnRelerr, g_spsumnMindx, g_spsumnMaxdx);
   spHr.setol(g_spHrAbserr, g_spHrRelerr, g_spHrMindx, g_spHrMaxdx);
+  spRotated.setol(g_spRotatedAbserr, g_spRotatedRelerr, g_spRotatedMindx, g_spRotatedMaxdx);
+}
+
+
+void ModelCalculator::qxSlice(double qxMax, double _qz)
+{
+	if (qxMax < 0 || qz < 0)
+		throw domain_error("ERROR: qxMax and qz must both take positive values");
+  buildInterpForRotatedStrFct(qxMax, qz);
 }
 
 
 /******************************************************************************
-In order to build rotated structure factor interpolant, the program needs
-mosaic-convolved structure factor. This function decides the necessary
-range of qr for mosaic-convolved structure factor. The upper limit on
-the range is slightly larger than qx high limit for rotated structure factor
-because qr >= qx for any value of qy.
+
 ******************************************************************************/
-void ModelCalculator::buildInterpForRotatedStrFct(double qxMax, double qz)
+void ModelCalculator::buildInterpForRotatedStrFct(double qxMax, double _qz)
 {
-  //double qy = max(fabs(getLowerLimit(qxMax, qz, wavelength)), 
-  //                fabs(getUpperLimit(qxMax, qz, wavelength)));
-  //double qrMax = sqrt(qxMax*qxMax + qy*qy);
-  currqz = qz;
+  qz = _qz;
   spRotated.findPoints( log(0+SMALLNUM), log(qxMax+SMALLNUM) );
 }
 
 
+/******************************************************************************
+Initiates building of mosaic-convolved structure factor.
+
+The inputs, qxMax and qzMax, are the size of a desired CCD structure factor 
+map. This function will add 20*beamSigma to qxMax to account for an extra
+convolution due to the horizontal beam. Then, it computes qrMax, which is
+larger than qxMax because of the qy integration due to the sample rotation.
+The mosaic-convolved structure factor is a map in (q, theta) space. theta
+variable runs from 0 to THETAMAX instead of PI/2. This is to avoid 
+pathological behavior of the structure factor near the equator. q variable
+runs up to the maximum q calculated based on qrMax and qzMax, so the 
+mosaic-convolved structure factor is larger than the desired CCD map by 
+more than qrMax-qxMax. This is because at the point (qrMax, qzMax), the 
+structure factor is convolved from all q-space points with the same q value, 
+which are outside of the desired CCD map. 
+
+It is necessary to call this function before calling getCCDStrFct.
+
+If mosaic is negligible, the program will bypass building of the mosaic-
+convolved structure factor and only build a 2D map of the pure structre 
+factor.
+******************************************************************************/
 void ModelCalculator::init(double qxMax, double qzMax)
 {
   qxMax = qxMax + 20*beamSigma;
   double qyMax = max(fabs(getLowerLimit(qxMax, qzMax, wavelength)), 
                      fabs(getUpperLimit(qxMax, qzMax, wavelength)));
   double qrMax = sqrt(qxMax*qxMax + qyMax*qyMax);
-  buildInterpForMosaicStrFct(sqrt(qrMax*qrMax+qzMax*qzMax), PI/2);
+  
+  if (mosaic > NEGLIGIBLE_MOSAIC) { 
+    buildInterpForMosaicStrFct(sqrt(qrMax*qrMax+qzMax*qzMax), THETAMAX);
+  } else {
+    buildInterpForStrFct(qrMax, qzMax);
+  }
 }
 
 
+/******************************************************************************
+Build mosaic-convolved structure factor.
+
+This function builds a 2D interpolant for the mosaic-convolved structure 
+factor via algMosaic, which is an Alglib_CubicSpline2D object. The function
+takes the maximum q and theta for the mosaic-convolved structure factor, which
+will be in (q, theta) space. The mosaic convolution is most natural in this 
+coodinate system. q variable runs from QMIN instead of 0 because the structure
+factor possesses pathological behavior close to q = 0.
+******************************************************************************/
 void ModelCalculator::buildInterpForMosaicStrFct(double qMax, double thetaMax)
 {
   // The structure factor map must span in both qr and qz up to qMax
@@ -141,17 +193,17 @@ void ModelCalculator::buildInterpForMosaicStrFct(double qMax, double thetaMax)
   
   vector<double> qvec;
   vector<double> thetavec;
-  // Create vectors using qMax and thetaMax
-  qvec.push_back();
-  thetavec.push_back();
+  // qMax+QSTEP ensures that qMax is included (avoiding floating point issue)
+  for (double q = QMIN; q < qMax+QSTEP;) {
+    qvec.push_back(q);
+    q += QSTEP;
+  }
+  for (double th = 0; th < thetaMAX+THETASTEP; ) {
+    thetavec.push_back(th);
+    th += THETASTEP;
+  }
   
   algMosaic.buildInterpolant(qvec, thetavec);
-}
-
-
-double ModelCalculator::evalMosaicStrFct(double qr, double qz)
-{
-  return algMosaic.evaluate(sqrt(qr*qr+qz*qz), atan(qr/qz);
 }
 
 
@@ -163,7 +215,7 @@ every qr of 0.001, and store the value in the qrqzStrFct vector. Then, the qr,
 qz, and qrqzStrFct vectors are used to build 2D interpolant, which can 
 evaluate the structure factor at any arbitrary set of qr and qz.
 
-The structure factor must be calculated qr slice by slice because the
+The structure factor must be calculated qr-slice by slice because the
 calculation of the theory is most efficient along a fixed qz value. Therefore,
 wrapping a bunch of calculated qr slices by a 2D interpolation is an
 effienet way to build the structure factor in qr, qz coordinates. 
@@ -188,15 +240,8 @@ void ModelCalculator::buildInterpForStrFct(double qrMax, double qzMax)
 }
 
 
-double ModelCalculator::evalStrFct(double q, double theta)
-{
-  return algStrFct.evaluate(q*sin(theta), q*cos(theta));
-}
-
-
 /******************************************************************************
-Initiate building the interpolants for the pure structure factor, mosaic-
-convolved structure factor, and rotated structure factor.
+Initiate building the interpolants for the pure structure factor.
 ******************************************************************************/
 void ModelCalculator::qrSlice(double qrMax, double qz)
 {
@@ -215,8 +260,7 @@ so this function takes the exponential of the interpolated value.
 ******************************************************************************/
 double ModelCalculator::getCCDStrFct(double qx)
 {
-  // 0.05 hard coded for now. For some test cases, this worked well.
-	if (bFWHM > 0.05) {
+	if (bFWHM > NEGLIGIBLE_BEAM_SIZE) {
 		return beamConvolutedStrFct(qx);
 	} else {
 		return exp( spRotated.val(log(qx + SMALLNUM)) );
@@ -235,7 +279,8 @@ double ModelCalculator::beamConvolutedStrFct(double qx)
   gsl_function F;
   F.function = &s_convIntegrand;
   F.params = this;
-  // set integration limits
+  // qxMax + 20*beamSigma is the largest qx value it can go. To be safe,
+  // the integration only goes upto qxMax + 10*beamSigma
   double lowerLimit = qx - 10*beamSigma;
   double upperLimit = qx + 10*beamSigma;
   gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
@@ -275,7 +320,7 @@ double ModelCalculator::s_rotatedWrapper(double logqx, void *ptr)
 {
 	ModelCalculator *p = (ModelCalculator *)ptr;
 	double tmpQx = fabs(exp(logqx) - SMALLNUM);
-	return log(p->rotated(tmpQx, p->currqz));
+	return log(p->rotated(tmpQx));
 }
 
 
@@ -286,10 +331,9 @@ The lower and upper integration limits depend on qx, so their values get
 retrieved by ModelCalculator::getLowerLimit() and 
 ModelCalculator::getUpperLimit() functions
 *******************************************************************************/
-double ModelCalculator::rotated(double qx, double qz)
+double ModelCalculator::rotated(double qx)
 {
   currqx = qx;
-	currqz = qz;
 	double result, abserr;
 	gsl_function F;
 	F.function = &s_qyIntegrandWrapper;
@@ -314,37 +358,21 @@ double ModelCalculator::s_qyIntegrandWrapper(double qy, void *ptr)
 {
 	ModelCalculator *p = (ModelCalculator *)ptr;
 	double qr = sqrt(p->currqx*p->currqx + qy*qy);
-	return p->getMosaicStrFct(qr, p->currqz);
-}
-
-
-/******************************************************************************
-Return the structure factor after mosaic spread is treated.
-If mosaic > 0.001, it will return an interpolated value of the structure 
-factor with mosaic convolution.
-If mosaic is less than 0.001, it will return an interpolated value of the 
-structure factor without any additional operation done on itself.
-******************************************************************************/
-double ModelCalculator::getMosaicStrFct(double qr, double qz)
-{
-  // Takes the absolute value of qr to avoid a very small negative value 
-  // representing zero
-  const double negligible_mosaic = 0.001 * PI / 180;
-  if (mosaic > negligible_mosaic) {
-    return algMosaic.evaluate(fabs(qr), qz);
-  } else {
-    return exp(spStrFct.val(log(fabs(qr)+SMALLNUM)));
-  }
+	if (mosaic > NEGLIGIBLE_MOSAIC) {
+	  return p->algMosaic.evaluate(sqrt(qr*qr+p->qz*p->qz), atan(qr/p->qz));
+	} else {
+	  return p->algStrFct.evaluate(fabs(qr), p->qz);
+	}
 }
 
 
 /****************************************************************************** 
 Wrapper needed for AlglibCublicSpline2D object, algMosaic
 ******************************************************************************/
-double ModelCalculator::s_convolveMosaicWrapper(double qr, double qz, void *ptr)
+double ModelCalculator::s_convolveMosaicWrapper(double q, double theta, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
-  return convolveMosaic(sqrt(qr*qr+qz*qz), atan(qr/qz));
+  return convolveMosaic(q, theta);
 }
 
 
