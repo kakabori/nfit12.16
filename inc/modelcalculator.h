@@ -110,13 +110,13 @@ private:
   // interpolation support object for sum over n
   FunSupport spsumn;
   // interpolation support object for the structure factor
-  FunSupport spStrFct;
+  Alglib_CubicSpline2D algStrFct;
   // interpolation support object for effective finite size factor in r
   FunSupport spHr;
 	// interpolation support object for rotated structure factor
-  FunSupport spRotated;
+  Alglib_CubicSPline2D algRotated;
   // interpolation support object for mosaic convoluted structure factor
-  FunSupport spMosaic;
+  Alglib_CubicSpline2D algMosaic;
   
   Utable utable;
   double curr_r, currQr, currQx, currQy;
@@ -125,7 +125,8 @@ private:
   void avgMzChanged();
   void KcBDTChanged();
   void set_beamSigma();
-  void set_mosaic(double);
+  // mosaic is in radian, but the program takes the input in degrees
+  void set_mosaic(double a) {mosaic = PI * a / 180};
   
   // new addition to deal with mosaic spread ring
   double qrMax; qzMax;

@@ -35,10 +35,10 @@ ModelCalculator::ModelCalculator()
 
   //Interpolation support functions
   spsumn.init(s_sumnWrapper, this);
-  spStrFct.init(s_StrFctWrapper, this);
   spHr.init(s_HrWrapper, this);
-  spRotated.init(s_rotatedWrapper, this);
-  spMosaic.init(s_convolveMosaicWrapper, this);
+  algStrFct.init(s_StrFctWrapper, this);
+  algRotated.init(s_rotatedWrapper, this);
+  algMosaic.init(s_convolveMosaicWrapper, this);
   resetTOL();
 }
 
@@ -74,10 +74,10 @@ ModelCalculator::ModelCalculator(const ModelCalculator& mc)
   utable = mc.utable;
 
   spsumn.init(s_sumnWrapper, this);
-  spStrFct.init(s_StrFctWrapper, this);
   spHr.init(s_HrWrapper, this);
-  spRotated.init(s_rotatedWrapper, this);
-  spMosaic.init(s_convolveMosaicWrapper, this);
+  algStrFct.init(s_StrFctWrapper, this);
+  algRotated.init(s_rotatedWrapper, this);
+  algMosaic.init(s_convolveMosaicWrapper, this);
   resetTOL();
 
 	// call the updaters
@@ -102,11 +102,8 @@ set tolerance for interpolation
 *******************************************************************************/
 void ModelCalculator::resetTOL()
 {
-  spStrFct.setol(g_spStrFctAbserr, g_spStrFctRelerr, g_spStrFctMindx, g_spStrFctMaxdx);
   spsumn.setol(g_spsumnAbserr, g_spsumnRelerr, g_spsumnMindx, g_spsumnMaxdx);
   spHr.setol(g_spHrAbserr, g_spHrRelerr, g_spHrMindx, g_spHrMaxdx);
-  spRotated.setol(g_spRotatedAbserr, g_spRotatedRelerr, g_spRotatedMindx, g_spRotatedMaxdx);
-  spMosaic.setol(g_spMosaicAbserr, g_spMosaicRelerr, g_spMosaicMindx, g_spMosaicMaxdx);
 }
 
 
@@ -114,9 +111,9 @@ void buildCCDStrFct(double _qxMax, double _qzMax);
 {
   double qxMax = _qxMax + 20*beamSigma;
   qMax = getqMax(qxMax, _qzMax);
-  double qzStepSize = 0.001;
-  buildqrqzStrFct(qMax, qzStepSize);
-  buildInterpForMosaicStrFct();
+  
+  
+  buildInterpForMosaicStrFct(qMax);
   
 
 }
@@ -131,9 +128,50 @@ void ModelCalculator::getqMax(double qxMax, double qzMax)
 }
 
 
-void ModelCalculator::buildqrqzStrFct(double qMax, double qzStepSize)
+void ModelCalculator::buildInterpForMosaicStrFct()
 {
-  //somehow build 2D interpolant using ALGlib
+
+
+}
+
+
+
+double ModelCalculator::evalStrFct(double q, double theta)
+{
+  return algStrFct.evaluate(q*sin(theta), q*cos(theta));
+}
+
+
+/******************************************************************************
+Build 2D interpolant for the structure factor. 
+
+For every qz of 0.001, build an interpolant for the qr slice, evaluate it at 
+every qr of 0.001, and store the value in the qrqzStrFct vector. Then, the qr, 
+qz, and qrqzStrFct vectors are used to build 2D interpolant, which can 
+evaluate the structure factor at any arbitrary set of qr and qz.
+
+The structure factor must be calculated qr slice by slice because the
+calculation of the theory is most efficient along a fixed qz value. Therefore,
+wrapping a bunch of calculated qr slices by a 2D interpolation is an
+effienet way to build the structure factor in qr, qz coordinates. 
+******************************************************************************/
+void ModelCalculator::buildInterpForStrFct(double qrMax, double qzMax)
+{
+  vector<double> qrvec;
+  vector<double> qzvec;
+  // Create vectors
+  qrvec.push_back();
+  qzvec.push_back();
+  
+  typedef vector<double>::size_type sz;
+  for (sz i = 0; i < qzvec.size(); i++) {
+    qrSlice(qrMax, qzvec[i]);
+    for (sz j = 0; j < qrvec.size(); j++) {
+      qrqzStrFct.push_back(exp(spStrFct.val(log(fabs(qrvec[j])+SMALLNUM))));
+    }
+  }
+  
+  algStrFct.buildInterpolant(qrvec, qzvec, qrqzStrFct);  
 }
 
 
@@ -325,15 +363,16 @@ double ModelCalculator::s_convolveMosaicWrapper(double logqr, void *ptr)
 This function performs convolution of the structure factor with the mosaic
 distribution.
 ******************************************************************************/
-double ModelCalculator::convolveMosaic(double qr)
+double ModelCalculator::convolveMosaic(double q, double theta)
 {
-  currQr = qr;
+  curr_q = q;
+  curr_theta = theta;
   double result, abserr;
   gsl_function F;
   F.function = &s_mosaicIntegrandWrapper;
   F.params = this;
   double lowerLimit = 0;
-  double upperLimit = qrUpperLimit;
+  double upperLimit = PI / 2;
   gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
   return result;
@@ -343,11 +382,11 @@ double ModelCalculator::convolveMosaic(double qr)
 /******************************************************************************
 This function returns the integrand of the mosaic convolution. 
 ******************************************************************************/
-double ModelCalculator::s_mosaicIntegrandWrapper(double qr, void *ptr)
+double ModelCalculator::s_mosaicIntegrandWrapper(double theta, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
-	return exp(p->spStrFct.val(log(fabs(qr)+SMALLNUM))) * 
-	       p->mosaicDist(p->currQr-qr);
+	return p->interpStrFct(p->curr_q, curr_theta-theta) *
+	       p->mosaicDist(theta);
 }
 
 
@@ -355,9 +394,23 @@ double ModelCalculator::s_mosaicIntegrandWrapper(double qr, void *ptr)
 Mosaic spread distribution. Mosaic angle is approximated by qr/qz, which is
 good for small angle.
 ******************************************************************************/
-double ModelCalculator::mosaicDist(double qr)
+double ModelCalculator::mosaicDist(double theta)
 {
-  return 2 * mosaic / PI / (4*qr*qr + mosaic*mosaic);
+  return 2 * mosaic / PI / (4*theta*theta + mosaic*mosaic);
+}
+
+
+void get_q_theta(double qr, double qz, double& q, double& theta)
+{
+  q = sqrt(qr*qr + qz*qz);
+  theta = atan(qr/qz);
+}
+
+
+void get_qr_qz(double q, double theta, double& qr, double& qz)
+{
+  qr = q * sin(theta);
+  qz = q * cos(theta);
 }
 
 
@@ -569,14 +622,6 @@ void ModelCalculator::setSliceParameter(double _qz)
   spsumn.findPoints( log(0+SMALLNUM), log(cutoff_r+SMALLNUM) );
 }
 
-void ModelCalculator::KcBDTChanged()
-{
-  //double lambda = 1e16 * sqrt(Kc/B) / dspacing;
-  //double eta = 2.17 * (T+273.15) / sqrt(Kc*B) / dspacing /dspacing;
-  //in = sqrt(utable.lambda * utable.D / lambda / dspacing);
-  //out = eta * dspacing * dspacing / utable.D / utable.D / utable.eta;
-}
-
 
 /******************************************************************************
 update domain size parameters
@@ -603,13 +648,6 @@ void ModelCalculator::set_beamSigma()
 	double deltaQPerPixel = 2 * PI * pixelSize / wavelength / sdistance;
 	// bFWHM / 2.3548 is equal to beam Gaussian sigma
 	beamSigma = deltaQPerPixel * bFWHM / 2.3548;
-}
-
-
-/* mosaic is in radian, but the program takes the input in degrees */
-void ModelCalculator::set_mosaic(double a)
-{
-  mosaic = PI * a / 180;
 }
 
 
