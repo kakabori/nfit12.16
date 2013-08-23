@@ -8,8 +8,8 @@
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_bessel.h>
-#include "alglib/src/stdafx.h"
-#include "alglib/src/interpolation.h"
+//#include "alglib/src/stdafx.h"
+//#include "alglib/src/interpolation.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -25,7 +25,7 @@ using std::istringstream;
 using std::vector; using std::cout; using std::endl;
 using std::cerr;
 
-using namespace alglib;
+//using namespace alglib;
 
 #define PI 3.1415926535897932384626433832795
 #define SMALLNUM 0.00000000001
@@ -38,6 +38,8 @@ const double QMIN = 0.02; // in invrse-Angstrom
 const double QSTEP = 0.001;
 const double THETAMAX = PI / 3; 
 const double THETASTEP = 0.1 * PI / 180; // in radian
+const double QRSTEP = 0.001;
+const double QZSTEP = 0.001;
 
 ModelCalculator::ModelCalculator()
 {
@@ -79,8 +81,6 @@ ModelCalculator::ModelCalculator(const ModelCalculator& mc)
 	beamSigma = mc.beamSigma;
   cutoff_r = mc.cutoff_r;
   cutoff_n = mc.cutoff_n;
-  in = mc.in;
-  out = mc.out;
 
   workspace = gsl_integration_workspace_alloc(WORKSPACE_SIZE);
 
@@ -155,7 +155,7 @@ more than qrMax-qxMax. This is because at the point (qrMax, qzMax), the
 structure factor is convolved from all q-space points with the same q value, 
 which are outside of the desired CCD map. 
 
-It is necessary to call this function before calling getCCDStrFct.
+It is necessary to call this function before calling qxSlice.
 
 If mosaic is negligible, the program will bypass building of the mosaic-
 convolved structure factor and only build a 2D map of the pure structre 
@@ -164,8 +164,8 @@ factor.
 void ModelCalculator::init(double qxMax, double qzMax)
 {
   qxMax = qxMax + 20*beamSigma;
-  double qyMax = max(fabs(getLowerLimit(qxMax, qzMax, wavelength)), 
-                     fabs(getUpperLimit(qxMax, qzMax, wavelength)));
+  double qyMax = max(fabs(getLowerLimit(qxMax, qzMax)), 
+                     fabs(getUpperLimit(qxMax, qzMax)));
   double qrMax = sqrt(qxMax*qxMax + qyMax*qyMax);
   
   if (mosaic > NEGLIGIBLE_MOSAIC) { 
@@ -198,7 +198,7 @@ void ModelCalculator::buildInterpForMosaicStrFct(double qMax, double thetaMax)
     qvec.push_back(q);
     q += QSTEP;
   }
-  for (double th = 0; th < thetaMAX+THETASTEP; ) {
+  for (double th = 0; th < thetaMax+THETASTEP; ) {
     thetavec.push_back(th);
     th += THETASTEP;
   }
@@ -224,39 +224,44 @@ void ModelCalculator::buildInterpForStrFct(double qrMax, double qzMax)
 {
   vector<double> qrvec;
   vector<double> qzvec;
-  // Create vectors
-  qrvec.push_back();
-  qzvec.push_back();
+  vector<double> qrqzStrFctvec;
+
+  for (double qr = 0; qr < qrMax+QRSTEP;) {
+    qrvec.push_back(qr);
+    qr += QRSTEP;
+  }
+  for (double qz = 0; qz < qzMax+QZSTEP;) {
+    qzvec.push_back(qz);
+    qz += QZSTEP;
+  }
   
   typedef vector<double>::size_type sz;
   for (sz i = 0; i < qzvec.size(); i++) {
-    qrSlice(qrMax, qzvec[i]);
+    qrSlice(qrvec.back(), qzvec[i]);
     for (sz j = 0; j < qrvec.size(); j++) {
-      qrqzStrFct.push_back(exp(spStrFct.val(log(fabs(qrvec[j])+SMALLNUM))));
+      qrqzStrFctvec.push_back(exp(spStrFct.val(log(fabs(qrvec[j])+SMALLNUM))));
     }
   }
   
-  algStrFct.buildInterpolant(qrvec, qzvec, qrqzStrFct);  
+  algStrFct.buildInterpolant(qrvec, qzvec, qrqzStrFctvec);  
 }
 
 
 /******************************************************************************
 Initiate building the interpolants for the pure structure factor.
 ******************************************************************************/
-void ModelCalculator::qrSlice(double qrMax, double qz)
+void ModelCalculator::qrSlice(double qrMax, double _qz)
 {
-	if (qrMax < 0 || qz < 0)
+	if (qrMax < 0 || _qz < 0)
 		throw domain_error("ERROR: qrMax and qz must both take positive values");
-	setSliceParameter(qz);
+	setSliceParameter(_qz);
   spStrFct.findPoints( log(0+SMALLNUM), log(qrMax+SMALLNUM) );
 }
 
 
 /******************************************************************************
 FuncLmdif::modelCalcThread calls this function.
-This function returns the interpolated value of the rotated structure factor
-at the input qx. The interpolant returns the log of a rotated structure factor, 
-so this function takes the exponential of the interpolated value.
+
 ******************************************************************************/
 double ModelCalculator::getCCDStrFct(double qx)
 {
@@ -274,10 +279,10 @@ factor.
 ******************************************************************************/
 double ModelCalculator::beamConvolutedStrFct(double qx)
 {
-	currQx = qx;
+	currqx = qx;
   double result, abserr;
   gsl_function F;
-  F.function = &s_convIntegrand;
+  F.function = &s_beamConvIntegrand;
   F.params = this;
   // qxMax + 20*beamSigma is the largest qx value it can go. To be safe,
   // the integration only goes upto qxMax + 10*beamSigma
@@ -292,11 +297,11 @@ double ModelCalculator::beamConvolutedStrFct(double qx)
 /******************************************************************************
 Return the integrand for the integration that performs beam convolution
 ******************************************************************************/
-double ModelCalculator::s_convIntegrand(double qx, void *params)
+double ModelCalculator::s_beamConvIntegrand(double qx, void *params)
 {
 	ModelCalculator *p = (ModelCalculator *)params;
 	return exp( p->spRotated.val(log(fabs(qx) + SMALLNUM)) )
-	       * p->beamProfile(qx - p->currQx);
+	       * p->beamProfile(qx - p->currqx);
 }
 
 
@@ -336,10 +341,10 @@ double ModelCalculator::rotated(double qx)
   currqx = qx;
 	double result, abserr;
 	gsl_function F;
-	F.function = &s_qyIntegrandWrapper;
+	F.function = &s_rotatedIntegrand;
 	F.params = this;
-	double lowerLimit = getLowerLimit(qx, qz, wavelength);
-	double upperLimit = getUpperLimit(qx, qz, wavelength);
+	double lowerLimit = getLowerLimit(qx, qz);
+	double upperLimit = getUpperLimit(qx, qz);
 	gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
 	                    WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
 	return result;
@@ -354,11 +359,11 @@ The interpolation over the structure factor is done in (qr,qz) tuple.
 Calculates qr corresponding to the input qy and currQx.
 This wrapper is necessary for GSL qag.
 ******************************************************************************/
-double ModelCalculator::s_qyIntegrandWrapper(double qy, void *ptr)
+double ModelCalculator::s_rotatedIntegrand(double qy, void *ptr)
 {
 	ModelCalculator *p = (ModelCalculator *)ptr;
 	double qr = sqrt(p->currqx*p->currqx + qy*qy);
-	if (mosaic > NEGLIGIBLE_MOSAIC) {
+	if (p->mosaic > NEGLIGIBLE_MOSAIC) {
 	  return p->algMosaic.evaluate(sqrt(qr*qr+p->qz*p->qz), atan(qr/p->qz));
 	} else {
 	  return p->algStrFct.evaluate(fabs(qr), p->qz);
@@ -372,7 +377,7 @@ Wrapper needed for AlglibCublicSpline2D object, algMosaic
 double ModelCalculator::s_convolveMosaicWrapper(double q, double theta, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
-  return convolveMosaic(q, theta);
+  return p->convolveMosaic(q, theta);
 }
 
 
@@ -389,7 +394,7 @@ double ModelCalculator::convolveMosaic(double q, double theta)
   currtheta = theta;
   double result, abserr;
   gsl_function F;
-  F.function = &s_mosaicIntegrandWrapper;
+  F.function = &s_convolveMosaicIntegrand;
   F.params = this;
   double lowerLimit = 0;
   double upperLimit = PI / 3;
@@ -402,7 +407,7 @@ double ModelCalculator::convolveMosaic(double q, double theta)
 /******************************************************************************
 This function returns the integrand of the mosaic convolution. 
 ******************************************************************************/
-double ModelCalculator::s_mosaicIntegrandWrapper(double theta, void *ptr)
+double ModelCalculator::s_convolveMosaicIntegrand(double theta, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
   double qr = p->currq * sin(theta-p->currtheta);
@@ -434,7 +439,7 @@ double ModelCalculator::s_StrFctWrapper(double logqr, void *ptr)
   double ret = p->StrFct(tmpQr);
   if (ret < 0) {
     cout << "\nNegative structure factor was obtained at" << endl;
-    cout << "qr: " << p->currQr << " qz: " << p->qz << " Value: " << ret << endl;
+    cout << "qr: " << p->currqr << " qz: " << p->qz << " Value: " << ret << endl;
     cout << p->Kc << " " << p->B << " " << p->avgLr << " " << p->avgMz << " "
          << p->dspacing << " " << p->T << " " << p->wavelength << endl;
   }
@@ -448,10 +453,10 @@ value of qz specified by qz variable
 ******************************************************************************/
 double ModelCalculator::StrFct(double qr)
 {
-  currQr = qr;
+  currqr = qr;
   double result, abserr;
   gsl_function F;
-  F.function = &s_Fr;
+  F.function = &s_StrFctIntegrand;
   F.params = this;
   double lowerLimit = 0;
   double upperLimit = cutoff_r;
@@ -468,10 +473,10 @@ Two functions are their corresponding interpolation functions,
 H_r(r) and f_1(r) are both one dimensional interpolation using FunSupport class
 J_0(qr*r) is the zeroth order Bessel function of the first kind
 ******************************************************************************/
-double ModelCalculator::s_Fr(double r, void *ptr)
+double ModelCalculator::s_StrFctIntegrand(double r, void *ptr)
 {
 	ModelCalculator *p = (ModelCalculator *)ptr;
-  return r * p->spHr.val(r) * bessel_J0(p->currQr*r) *
+  return r * p->spHr.val(r) * bessel_J0(p->currqr*r) *
          p->spsumn.val(log(r+SMALLNUM)) / ARB_SCALE;
 }
 
@@ -559,7 +564,7 @@ The integrand in H_r(r) integration
 double ModelCalculator::s_HrIntegrand(double Lr, void *params)
 {
   ModelCalculator *p = (ModelCalculator *)params;
-  return Pr(Lr, p->avgLr) * Lr * Lr * finiteSizeFactor(p->curr_r/Lr);
+  return p->Pr(Lr) * Lr * Lr * p->finiteSizeFactor(p->curr_r/Lr);
 }
 
 
@@ -567,7 +572,7 @@ double ModelCalculator::s_HrIntegrand(double Lr, void *params)
 In-plane domain size distribution
 Can be changed to another function easily
 ******************************************************************************/
-double Pr(double Lr, double avgLr)
+double ModelCalculator::Pr(double Lr)
 {
   return exp(-Lr / avgLr) / avgLr;
 }
@@ -576,7 +581,7 @@ double Pr(double Lr, double avgLr)
 /******************************************************************************
 Finite size factor in r direction, F_r(r/Lr)
 ******************************************************************************/
-double finiteSizeFactor(double x)
+double ModelCalculator::finiteSizeFactor(double x)
 {
   if (x > 1) {
     return 0;
@@ -599,7 +604,7 @@ double ModelCalculator::Hz(int n)
 Return the lower limit of the qy integration for the current value of qx and 
 qz. The equation is derived in an appropirate report.
 ******************************************************************************/
-double getLowerLimit(double qx, double qz, double wavelength)
+double ModelCalculator::getLowerLimit(double qx, double qz)
 {
 	double theta = 0.5 * asin(sqrt(qx*qx+qz*qz)*wavelength/2/PI);
 	return -sqrt((4*PI*sin(theta)/wavelength)*(4*PI*sin(theta)/wavelength) -
@@ -611,10 +616,10 @@ double getLowerLimit(double qx, double qz, double wavelength)
 Return the upper limit of the qy integration for the currenct value of qx and 
 qz. The equation is derived in an appropriate report.
 ******************************************************************************/
-double getUpperLimit(double qx, double qz, double wavelength)
+double ModelCalculator::getUpperLimit(double qx, double qz)
 {
 	double omega = 2 * asin(wavelength*qz/4/PI);
-	return getLowerLimit(qx, qz, wavelength)*cos(omega)*
+	return getLowerLimit(qx, qz)*cos(omega)*
 	       (1+tan(omega)*tan(omega)) + qz*tan(omega);
 }
 
@@ -689,10 +694,10 @@ idx: the index for the corresponding parameter
 void ModelCalculator::setpara(double a, int idx)
 {
   switch(idx) {
-		case Var_Kc:                 Kc = a;  KcBDTChanged(); break;
-		case Var_B:                   B = a;  KcBDTChanged(); break;
-		case Var_D:            dspacing = a;  KcBDTChanged(); break;
-		case Var_T:                   T = a;  KcBDTChanged(); break;
+		case Var_Kc:                 Kc = a;  break;
+		case Var_B:                   B = a;  break;
+		case Var_D:            dspacing = a;  break;
+		case Var_T:                   T = a;  break;
 		case Var_avgLr:           avgLr = a;  avgLrChanged(); break;
 		case Var_avgMz:           avgMz = a;  avgMzChanged(); break;
 		case Var_mosaic:                       set_mosaic(a); break;
@@ -725,7 +730,6 @@ void ModelCalculator::paraSet(Para *p)
   sdistance = p->setup.s;
   avgLrChanged();
   avgMzChanged();
-  KcBDTChanged();
   set_beamSigma();
   set_mosaic(p->mosaic);
 }
@@ -755,11 +759,11 @@ void ModelCalculator::get_spRotatedPoints(vector<double>& x,vector<double>& y)
 }
 
 
-void ModelCalculator::getCCDStrFct(double qxlow, double qxhigh, double qz,
+void ModelCalculator::getCCDStrFct(double qxlow, double qxhigh, double _qz,
                                    vector<double>& qxv, vector<double>& sfv)
 {
-  setSliceParameter(qz);
-  QxSlice(qxlow, qxhigh);
+  init(qxhigh, _qz);
+  qxSlice(qxhigh, _qz);
   
   for (double qx = qxlow; qx < qxhigh; ) {
     qxv.push_back(qx);
@@ -772,8 +776,8 @@ void ModelCalculator::getCCDStrFct(double qxlow, double qxhigh, double qz,
 void ModelCalculator::getRotatedStrFct(double qxlow, double qxhigh, double _qz, 
                                        vector<double>& qxvec, vector<double>& rsf)
 {
-	setSliceParameter(_qz);
-	buildInterpForRotatedStrFct(qxlow, qxhigh);
+	init(qxhigh, _qz);
+	qxSlice(qxhigh, _qz);
 
 	for (double qx = qxlow; qx < qxhigh; ) {
 		qxvec.push_back(qx);
@@ -784,29 +788,36 @@ void ModelCalculator::getRotatedStrFct(double qxlow, double qxhigh, double _qz,
 
 
 void ModelCalculator::getMosaicStrFct(double qrlow, double qrhigh, double _qz,
-                                      vector<double>& qr, vector<double>& sf)
+                                      vector<double>& qrv, vector<double>& sf)
 {
-	if (qrlow < 0 || qrhigh < 0)
-		throw domain_error("qrlow and qrhigh must both take positive values");
-	setSliceParameter(_qz);
-  buildInterpForMosaicStrFct(qrlow, qrhigh);
+	init(qrhigh, _qz);
 
-	for (double q = qrlow; q < qrhigh;) {
-		qr.push_back(q);
-		sf.push_back(getMosaicStrFct(q));
-		q += 0.001;
+	for (double qr = qrlow; qr < qrhigh;) {
+		qrv.push_back(qr);
+		sf.push_back(algMosaic.evaluate(sqrt(qr*qr+_qz*_qz), atan(qr/_qz)));
+		qr += 0.001;
 	}
 }
 
 
+void ModelCalculator::get2DStrFct(double qrlow, double qrhigh , double _qz,
+                                  vector<double>& qrv, vector<double>& sfv)
+{
+  init(qrhigh, _qz);
+  
+  for (double qr = qrlow; qr < qrhigh; ) {
+    qrv.push_back(qr);
+    sfv.push_back(algStrFct.evaluate(qr, _qz));
+    qr += 0.001;
+  }
+}
+                                  
+
 void ModelCalculator::getStrFct(double qrlow, double qrhigh, double _qz, 
                                 vector<double>& qrvec, vector<double>& sf)
 {
-	if (qrlow < 0 || qrhigh < 0)
-		throw domain_error("qrlow and qrhigh must both take positive values");
-	setSliceParameter(_qz);
-	buildInterpForStrFct(qrlow, qrhigh);
-
+	qrSlice(qrhigh, _qz);
+	
 	for (double qr = qrlow; qr < qrhigh;) {
 		qrvec.push_back(qr);
 		sf.push_back( exp( spStrFct.val(log(qr + SMALLNUM)) ) );

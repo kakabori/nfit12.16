@@ -2,11 +2,15 @@
 #include <iostream>
 #include <queue>
 #include <vector>
+#include <queue>
 #include <algorithm>
 #include "alglib/src/stdafx.h"
 #include "alglib/src/interpolation.h"
+#include "alglib_interpolation.h"
 
 using namespace alglib;
+using std::vector; using std::queue;
+
 
 
 /******************************************************************************
@@ -22,31 +26,51 @@ an interpolated value at (x,y)
 void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid, 
                                             const vector<double>& ygrid)
 {
-
-  vector<double>::size_type sizex = xgrid.size();
-  vector<double>::size_type sizey = ygrid.size();
-  double _x[sizex];
-  double _y[sizey];
-  double _f[sizex*sizey];
-
-  for (int i = 0; i < sizex; i++) _x[i] = xgrid[i];
-  for (int i = 0; i < sizey; i++) _y[i] = ygrid[i];
-  for (int i = 0; i < sizey; i++) {
-    for (int j = 0; j < sizex; j++) {
-      _f[i*sizex+j] = function(_x[j], _y[i], parameter);
+  vector<double> f;
+  typedef vector<double>::size_type sz;
+  
+  for (sz i = 0; i < ygrid.size(); i++) {
+    for (sz j = 0; j < xgrid.size(); j++) {
+      f.push_back(function(xgrid[j], ygrid[i], parameter));
     }
   }
+  
+  buildInterpolant(xgrid, ygrid, f);
+}
+
+
+void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid,
+                                            const vector<double>& ygrid,
+                                            const vector<double>& fvalue)
+{
+  typedef vector<double>::size_type sz;
+  sz sizex = xgrid.size();
+  sz sizey = ygrid.size();
+  sz sizef = fvalue.size();
+  
+  double _x[sizex];
+  double _y[sizey];
+  double _f[sizef];
+
+  for (sz i = 0; i < sizex; i++) _x[i] = xgrid[i];
+  for (sz i = 0; i < sizey; i++) _y[i] = ygrid[i];
+  for (sz i = 0; i < sizef; i++) _f[i] = fvalue[i];
 
   xarray.setcontent(sizex, _x);
   yarray.setcontent(sizey, _y);
-  farray.setcontent(sizex*sizey, _f);
-  spline2dbuildbicubicv(xarray, size_x, yarray, size_y, farray, 1, spline);
+  farray.setcontent(sizef, _f);
+  spline2dbuildbicubicv(xarray, sizex, yarray, sizey, farray, 1, spline);
 }
+
+
+
+
 
 double Alglib_CubicSpline2D::evaluate(double vx, double vy)
 {
   return spline2dcalc(spline, vx, vy);
 }
+
 
 
 
@@ -77,8 +101,8 @@ int Alglib_CubicSpline2D::buildGridPoints(double initLeft, double initRight, dou
   double middle, vmiddle;
   queue<double> recursionQueue;
 
-  double initVleft = Function(initLeft, line, para);
-  double initVright = Function(initRight, line, para);
+  double initVleft = function(initLeft, line, parameter);
+  double initVright = function(initRight, line, parameter);
 
   oneDimGrid.push_back(initLeft);
 
@@ -100,7 +124,7 @@ int Alglib_CubicSpline2D::buildGridPoints(double initLeft, double initRight, dou
     vright = recursionQueue.front();
     recursionQueue.pop();
     middle = (left + right) / 2;
-    vmiddle = Function(middle, line, para);
+    vmiddle = function(middle, line, parameter);
 
     /*If the function is not linear between two end points within
       specified tolerances, split the range in half, and add two sets of
@@ -127,24 +151,26 @@ int Alglib_CubicSpline2D::buildGridPoints(double initLeft, double initRight, dou
       oneDimGrid.push_back(right);
     }
 
-    return oneDimGrid.size();
+  
   }
 
   /*The points are not guaranteed to be in sorted order, so x values must be
     sorted. Finally corresponding function values are added to the vector of y
   values.*/
   sort(oneDimGrid.begin(), oneDimGrid.end());
+    return oneDimGrid.size();
 }
 
 /**
   Sort input vector x in increasing order, and then sort y accordingly.
   The underlining idea was taken from Accelerated C++ (textbook).
 **/
+/*
 void Alglib_CubicSpline2D::sortXYvectors(vector<double>& x, vector<double>& y)
 {
   ;
 }
-
+*/
 
 void Alglib_CubicSpline2D::buildInterpolant(double xleft, double xright, double ybottom, double ytop)
 {
@@ -152,22 +178,23 @@ void Alglib_CubicSpline2D::buildInterpolant(double xleft, double xright, double 
   buildGridPoints(xleft, xright, ybottom, xgrid);
   buildGridPoints(ybottom, ytop, xleft, ygrid);
 
-  vector<double>::size_type sizex = xgrid.size();
-  vector<double>::size_type sizey = ygrid.size();
+  typedef vector<double>::size_type sz;
+  sz sizex = xgrid.size();
+  sz sizey = ygrid.size();
   double _x[sizex];
   double _y[sizey];
   double _f[sizex*sizey];
 
-  for (int i = 0; i < sizex; i++) _x[i] = xgrid[i];
-  for (int i = 0; i < sizey; i++) _y[i] = ygrid[i];
-  for (int i = 0; i < sizey; i++) {
-    for (int j = 0; j < sizex; j++) {
-      _f[i*sizex+j] = Function(_x[j], _y[i], para);
+  for (sz i = 0; i < sizex; i++) _x[i] = xgrid[i];
+  for (sz i = 0; i < sizey; i++) _y[i] = ygrid[i];
+  for (sz i = 0; i < sizey; i++) {
+    for (sz j = 0; j < sizex; j++) {
+      _f[i*sizex+j] = function(_x[j], _y[i], parameter);
     }
   }
 
   xarray.setcontent(sizex, _x);
   yarray.setcontent(sizey, _y);
   farray.setcontent(sizex*sizey, _f);
-  spline2dbuildbicubicv(xarray, size_x, yarray, size_y, farray, 1, spline);
+  spline2dbuildbicubicv(xarray, sizex, yarray, sizey, farray, 1, spline);
 }

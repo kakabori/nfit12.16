@@ -1,5 +1,6 @@
 _OBJS =	funsupport.o globalVariables.o modelcalculator.o Para.o \
-        tvds.o utable.o fileTools.o test_ModelCalculator.o
+        alglib_interpolation.o tvds.o utable.o fileTools.o \
+        test_ModelCalculator.o
 
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
@@ -13,9 +14,9 @@ TK = tk8.4
 BLT = BLT
 
 CFLAGS = -Wall -O0 -ffast-math -fPIC -lpthread -g
-CLINK = -lm -l$(TCL) -l$(TK) -l$(BLT) -lpthread \
+CLINK = -lm -l$(TCL) -l$(TK) -l$(BLT) -lpthread -lalglib\
         -lgsl -lgslcblas -Wl,-rpath,.
-CPATH = -I/usr/include/$(TCL) -I$(IDIR) 
+CPATH = -I/usr/include/$(TCL) -I$(IDIR) -I/home/kiyo/programs -L../
 
 all: test_ModelCalculator_class
 
@@ -29,7 +30,8 @@ clean:
 	rm -f $(ODIR)/funsupport.o $(ODIR)/globalVariables.o \
 	      $(ODIR)/modelcalculator.o $(ODIR)/Para.o $(ODIR)/tvds.o \
 	      $(ODIR)/utable.o $(ODIR)/fileTools.o \
-	      $(ODIR)/test_ModelCalculator.o
+	      $(ODIR)/test_ModelCalculator.o \
+	      $(ODIR)/alglib_interpolation.o
 
 
 	
