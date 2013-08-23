@@ -128,13 +128,6 @@ void ModelCalculator::getqMax(double qxMax, double qzMax)
 }
 
 
-void ModelCalculator::buildInterpForMosaicStrFct()
-{
-
-
-}
-
-
 
 double ModelCalculator::evalStrFct(double q, double theta)
 {
@@ -175,6 +168,10 @@ void ModelCalculator::buildInterpForStrFct(double qrMax, double qzMax)
 }
 
 
+
+
+
+
 /******************************************************************************
 Initiate building the interpolants for the pure structure factor, mosaic-
 convolved structure factor, and rotated structure factor.
@@ -183,7 +180,8 @@ void ModelCalculator::qrSlice(double qrMax, double qz)
 {
 	if (qrMax < 0 || qz < 0)
 		throw domain_error("ERROR: qrMax and qz must both take positive values");
-  buildInterpForRotatedStrFct(0, qxhigh + 20*beamSigma);
+	setSliceParameter(qz);
+  spStrFct.findPoints( log(0+SMALLNUM), log(qrMax+SMALLNUM) );
 }
 
 
@@ -194,28 +192,25 @@ range of qr for mosaic-convolved structure factor. The upper limit on
 the range is slightly larger than qx high limit for rotated structure factor
 because qr >= qx for any value of qy.
 ******************************************************************************/
-void ModelCalculator::buildInterpForRotatedStrFct(double qxlow, double qxhigh)
+void ModelCalculator::buildInterpForRotatedStrFct(double qxMax, double qz)
 {
-  double qy = max(fabs(getLowerLimit(qxhigh, qz, wavelength)), 
-                  fabs(getUpperLimit(qxhigh, qz, wavelength)));
-  double qrhigh = sqrt(qxhigh*qxhigh + qy*qy);
-  buildInterpForMosaicStrFct(qxlow, qrhigh);
-  spRotated.findPoints( log(qxlow+SMALLNUM), log(qxhigh+SMALLNUM) );
+  //double qy = max(fabs(getLowerLimit(qxMax, qz, wavelength)), 
+  //                fabs(getUpperLimit(qxMax, qz, wavelength)));
+  //double qrMax = sqrt(qxMax*qxMax + qy*qy);
+  //buildInterpForMosaicStrFct(qxlow, qrhigh);
+  currqz = qz;
+  spRotated.findPoints( log(0+SMALLNUM), log(qxMax+SMALLNUM) );
 }
 
 
 void ModelCalculator::buildInterpForMosaicStrFct(double qrlow, double qrhigh)
 {
   buildInterpForStrFct(0, qrhigh+0.101);
-  qrUpperLimit = qrhigh + 0.1;
-  spMosaic.findPoints( log(qrlow+SMALLNUM), log(qrhigh+SMALLNUM) );
+  algMosaic.build()
 }
 
 
-void ModelCalculator::buildInterpForStrFct(double qrlow, double qrhigh)
-{
-  spStrFct.findPoints( log(qrlow+SMALLNUM), log(qrhigh+SMALLNUM) );
-}
+
 
 
 /******************************************************************************
@@ -286,7 +281,7 @@ double ModelCalculator::s_rotatedWrapper(double logqx, void *ptr)
 {
 	ModelCalculator *p = (ModelCalculator *)ptr;
 	double tmpQx = fabs(exp(logqx) - SMALLNUM);
-	return log(p->rotated(tmpQx));
+	return log(p->rotated(tmpQx, p->currqz));
 }
 
 
@@ -297,9 +292,10 @@ The lower and upper integration limits depend on qx, so their values get
 retrieved by ModelCalculator::getLowerLimit() and 
 ModelCalculator::getUpperLimit() functions
 *******************************************************************************/
-double ModelCalculator::rotated(double qx)
+double ModelCalculator::rotated(double qx, double qz)
 {
-	currQx = qx;
+  currqx = qx;
+	currqz = qz;
 	double result, abserr;
 	gsl_function F;
 	F.function = &s_qyIntegrandWrapper;
@@ -323,8 +319,8 @@ This wrapper is necessary for GSL qag.
 double ModelCalculator::s_qyIntegrandWrapper(double qy, void *ptr)
 {
 	ModelCalculator *p = (ModelCalculator *)ptr;
-	double qr = sqrt(p->currQx*p->currQx + qy*qy);
-	return p->getMosaicStrFct(qr);
+	double qr = sqrt(p->currqx*p->currqx + qy*qy);
+	return p->getMosaicStrFct(qr, p->currqz);
 }
 
 
@@ -335,13 +331,13 @@ factor with mosaic convolution.
 If mosaic is less than 0.001, it will return an interpolated value of the 
 structure factor without any additional operation done on itself.
 ******************************************************************************/
-double ModelCalculator::getMosaicStrFct(double qr)
+double ModelCalculator::getMosaicStrFct(double qr, double qz)
 {
   // Takes the absolute value of qr to avoid a very small negative value 
   // representing zero
   const double negligible_mosaic = 0.001 * PI / 180;
   if (mosaic > negligible_mosaic) {
-    return exp(spMosaic.val(log(fabs(qr)+SMALLNUM)));
+    return algMosaic.evaluate(fabs(qr), qz);
   } else {
     return exp(spStrFct.val(log(fabs(qr)+SMALLNUM)));
   }
@@ -349,13 +345,12 @@ double ModelCalculator::getMosaicStrFct(double qr)
 
 
 /****************************************************************************** 
-Wrapper needed for FunSupport object, spMosaic
+Wrapper needed for AlglibCublicSpline2D object, algMosaic
 ******************************************************************************/
-double ModelCalculator::s_convolveMosaicWrapper(double logqr, void *ptr)
+double ModelCalculator::s_convolveMosaicWrapper(double qr, double qz, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
-  double tmpQr = fabs(exp(logqr) - SMALLNUM);
-  return log(p->convolveMosaic(tmpQr));
+  return convolveMosaic(sqrt(qr*qr+qz*qz), atan(qr/qz));
 }
 
 
@@ -365,8 +360,13 @@ distribution.
 ******************************************************************************/
 double ModelCalculator::convolveMosaic(double q, double theta)
 {
+<<<<<<< HEAD
   curr_q = q;
   curr_theta = theta;
+=======
+  currq = q;
+  currtheta = theta;
+>>>>>>> 51269e26a10eebd13672f7a2e5c2522129fafa44
   double result, abserr;
   gsl_function F;
   F.function = &s_mosaicIntegrandWrapper;
@@ -385,8 +385,14 @@ This function returns the integrand of the mosaic convolution.
 double ModelCalculator::s_mosaicIntegrandWrapper(double theta, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
+<<<<<<< HEAD
 	return p->interpStrFct(p->curr_q, curr_theta-theta) *
 	       p->mosaicDist(theta);
+=======
+  double qr = p->currq * sin(theta-p->currtheta);
+  double qz = p->currq * cos(theta-p->currtheta);
+	return p->algStrFct.evaluate(qr, qz) * p->mosaicDist(theta);
+>>>>>>> 51269e26a10eebd13672f7a2e5c2522129fafa44
 }
 
 
@@ -395,6 +401,7 @@ Mosaic spread distribution. Mosaic angle is approximated by qr/qz, which is
 good for small angle.
 ******************************************************************************/
 double ModelCalculator::mosaicDist(double theta)
+<<<<<<< HEAD
 {
   return 2 * mosaic / PI / (4*theta*theta + mosaic*mosaic);
 }
@@ -411,6 +418,10 @@ void get_qr_qz(double q, double theta, double& qr, double& qz)
 {
   qr = q * sin(theta);
   qz = q * cos(theta);
+=======
+{
+  return 2 * mosaic / PI / (4*theta*theta + mosaic*mosaic);
+>>>>>>> 51269e26a10eebd13672f7a2e5c2522129fafa44
 }
 
 
