@@ -107,31 +107,51 @@ void ModelCalculator::resetTOL()
 }
 
 
-void buildCCDStrFct(double _qxMax, double _qzMax);
+/******************************************************************************
+In order to build rotated structure factor interpolant, the program needs
+mosaic-convolved structure factor. This function decides the necessary
+range of qr for mosaic-convolved structure factor. The upper limit on
+the range is slightly larger than qx high limit for rotated structure factor
+because qr >= qx for any value of qy.
+******************************************************************************/
+void ModelCalculator::buildInterpForRotatedStrFct(double qxMax, double qz)
 {
-  double qxMax = _qxMax + 20*beamSigma;
-  qMax = getqMax(qxMax, _qzMax);
-  
-  
-  buildInterpForMosaicStrFct(qMax);
-  
-
+  //double qy = max(fabs(getLowerLimit(qxMax, qz, wavelength)), 
+  //                fabs(getUpperLimit(qxMax, qz, wavelength)));
+  //double qrMax = sqrt(qxMax*qxMax + qy*qy);
+  currqz = qz;
+  spRotated.findPoints( log(0+SMALLNUM), log(qxMax+SMALLNUM) );
 }
 
 
-void ModelCalculator::getqMax(double qxMax, double qzMax)
+void ModelCalculator::init(double qxMax, double qzMax)
 {
-  double qy = max(fabs(getLowerLimit(qxMax, qzMax, wavelength)), 
-                  fabs(getUpperLimit(qxMax, qzMax, wavelength)));
-  double qrMax = sqrt(qxMax*qxMax + qy*qy);
-  return max(qrMax, qzMax);
+  qxMax = qxMax + 20*beamSigma;
+  double qyMax = max(fabs(getLowerLimit(qxMax, qzMax, wavelength)), 
+                     fabs(getUpperLimit(qxMax, qzMax, wavelength)));
+  double qrMax = sqrt(qxMax*qxMax + qyMax*qyMax);
+  buildInterpForMosaicStrFct(sqrt(qrMax*qrMax+qzMax*qzMax), PI/2);
 }
 
 
-
-double ModelCalculator::evalStrFct(double q, double theta)
+void ModelCalculator::buildInterpForMosaicStrFct(double qMax, double thetaMax)
 {
-  return algStrFct.evaluate(q*sin(theta), q*cos(theta));
+  // The structure factor map must span in both qr and qz up to qMax
+  buildInterpForStrFct(qMax, qMax);
+  
+  vector<double> qvec;
+  vector<double> thetavec;
+  // Create vectors using qMax and thetaMax
+  qvec.push_back();
+  thetavec.push_back();
+  
+  algMosaic.buildInterpolant(qvec, thetavec);
+}
+
+
+double ModelCalculator::evalMosaicStrFct(double qr, double qz)
+{
+  return algMosaic.evaluate(sqrt(qr*qr+qz*qz), atan(qr/qz);
 }
 
 
@@ -168,8 +188,10 @@ void ModelCalculator::buildInterpForStrFct(double qrMax, double qzMax)
 }
 
 
-
-
+double ModelCalculator::evalStrFct(double q, double theta)
+{
+  return algStrFct.evaluate(q*sin(theta), q*cos(theta));
+}
 
 
 /******************************************************************************
@@ -183,34 +205,6 @@ void ModelCalculator::qrSlice(double qrMax, double qz)
 	setSliceParameter(qz);
   spStrFct.findPoints( log(0+SMALLNUM), log(qrMax+SMALLNUM) );
 }
-
-
-/******************************************************************************
-In order to build rotated structure factor interpolant, the program needs
-mosaic-convolved structure factor. This function decides the necessary
-range of qr for mosaic-convolved structure factor. The upper limit on
-the range is slightly larger than qx high limit for rotated structure factor
-because qr >= qx for any value of qy.
-******************************************************************************/
-void ModelCalculator::buildInterpForRotatedStrFct(double qxMax, double qz)
-{
-  //double qy = max(fabs(getLowerLimit(qxMax, qz, wavelength)), 
-  //                fabs(getUpperLimit(qxMax, qz, wavelength)));
-  //double qrMax = sqrt(qxMax*qxMax + qy*qy);
-  //buildInterpForMosaicStrFct(qxlow, qrhigh);
-  currqz = qz;
-  spRotated.findPoints( log(0+SMALLNUM), log(qxMax+SMALLNUM) );
-}
-
-
-void ModelCalculator::buildInterpForMosaicStrFct(double qrlow, double qrhigh)
-{
-  buildInterpForStrFct(0, qrhigh+0.101);
-  algMosaic.build()
-}
-
-
-
 
 
 /******************************************************************************
@@ -357,22 +351,20 @@ double ModelCalculator::s_convolveMosaicWrapper(double qr, double qz, void *ptr)
 /******************************************************************************
 This function performs convolution of the structure factor with the mosaic
 distribution.
+
+The upper limit is pi/3 instead of pi/2 b/c qz = 0 is pathological
+in the structure factor.
 ******************************************************************************/
 double ModelCalculator::convolveMosaic(double q, double theta)
 {
-<<<<<<< HEAD
-  curr_q = q;
-  curr_theta = theta;
-=======
   currq = q;
   currtheta = theta;
->>>>>>> 51269e26a10eebd13672f7a2e5c2522129fafa44
   double result, abserr;
   gsl_function F;
   F.function = &s_mosaicIntegrandWrapper;
   F.params = this;
   double lowerLimit = 0;
-  double upperLimit = PI / 2;
+  double upperLimit = PI / 3;
   gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
   return result;
@@ -385,14 +377,9 @@ This function returns the integrand of the mosaic convolution.
 double ModelCalculator::s_mosaicIntegrandWrapper(double theta, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
-<<<<<<< HEAD
-	return p->interpStrFct(p->curr_q, curr_theta-theta) *
-	       p->mosaicDist(theta);
-=======
   double qr = p->currq * sin(theta-p->currtheta);
   double qz = p->currq * cos(theta-p->currtheta);
 	return p->algStrFct.evaluate(qr, qz) * p->mosaicDist(theta);
->>>>>>> 51269e26a10eebd13672f7a2e5c2522129fafa44
 }
 
 
@@ -401,27 +388,8 @@ Mosaic spread distribution. Mosaic angle is approximated by qr/qz, which is
 good for small angle.
 ******************************************************************************/
 double ModelCalculator::mosaicDist(double theta)
-<<<<<<< HEAD
 {
   return 2 * mosaic / PI / (4*theta*theta + mosaic*mosaic);
-}
-
-
-void get_q_theta(double qr, double qz, double& q, double& theta)
-{
-  q = sqrt(qr*qr + qz*qz);
-  theta = atan(qr/qz);
-}
-
-
-void get_qr_qz(double q, double theta, double& qr, double& qz)
-{
-  qr = q * sin(theta);
-  qz = q * cos(theta);
-=======
-{
-  return 2 * mosaic / PI / (4*theta*theta + mosaic*mosaic);
->>>>>>> 51269e26a10eebd13672f7a2e5c2522129fafa44
 }
 
 
