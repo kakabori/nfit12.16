@@ -412,7 +412,7 @@ double ModelCalculator::s_convolveMosaicIntegrand(double theta, void *ptr)
   ModelCalculator *p = (ModelCalculator *)ptr;
   double qr = p->currq * sin(theta-p->currtheta);
   double qz = p->currq * cos(theta-p->currtheta);
-	return p->algStrFct.evaluate(qr, qz) * p->mosaicDist(theta);
+	return p->algStrFct.evaluate(fabs(qr), qz) * p->mosaicDist(theta);
 }
 
 

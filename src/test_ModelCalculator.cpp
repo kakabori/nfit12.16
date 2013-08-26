@@ -215,8 +215,8 @@ int main()
 {
   //test1DStrFct();
   //test2DStrFctWithoutMosaic();
-  test2DStrFctWithMosaic();
-  //testMosaicStrFct();
+  //test2DStrFctWithMosaic();
+  testMosaicStrFct();
   //testRotatedStrFct();
   //testCCDStrFct();
 
