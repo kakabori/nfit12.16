@@ -213,12 +213,12 @@ void testUtable()
 
 int main()
 {
-  test1DStrFct();
-  test2DStrFctWithoutMosaic();
+  //test1DStrFct();
+  //test2DStrFctWithoutMosaic();
   test2DStrFctWithMosaic();
-  testMosaicStrFct();
-  testRotatedStrFct();
-  testCCDStrFct();
+  //testMosaicStrFct();
+  //testRotatedStrFct();
+  //testCCDStrFct();
 
 	return 0;
 }
