@@ -396,8 +396,8 @@ double ModelCalculator::convolveMosaic(double q, double theta)
   gsl_function F;
   F.function = &s_convolveMosaicIntegrand;
   F.params = this;
-  double lowerLimit = 0;
-  double upperLimit = PI / 3;
+  double lowerLimit = -PI/3;
+  double upperLimit = PI/3;
   gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
   return result;
@@ -412,13 +412,12 @@ double ModelCalculator::s_convolveMosaicIntegrand(double theta, void *ptr)
   ModelCalculator *p = (ModelCalculator *)ptr;
   double qr = p->currq * sin(theta-p->currtheta);
   double qz = p->currq * cos(theta-p->currtheta);
-	return p->algStrFct.evaluate(fabs(qr), qz) * p->mosaicDist(theta);
+	return p->algStrFct.evaluate(fabs(qr), fabs(qz)) * p->mosaicDist(theta);
 }
 
 
 /******************************************************************************
-Mosaic spread distribution. Mosaic angle is approximated by qr/qz, which is
-good for small angle.
+Mosaic spread distribution. 
 ******************************************************************************/
 double ModelCalculator::mosaicDist(double theta)
 {
@@ -800,6 +799,32 @@ void ModelCalculator::getMosaicStrFct(double qrlow, double qrhigh, double _qz,
 }
 
 
+void ModelCalculator::getMosaicStrFct(double qrlow, double qrhigh, 
+                                      double qzlow, double qzhigh,
+                                      vector<double>& qrv, vector<double>& qzv,
+                                      vector<double>& sfv)
+{
+  init(qrhigh, qzhigh);
+  
+  for (double qr = qrlow; qr < qrhigh; ) {
+    qrv.push_back(qr);
+    qr += 0.001;
+  }
+  for (double qz = qzlow; qz < qzhigh; ) {
+    qzv.push_back(qz);
+    qz += 0.001;
+  }
+  
+  typedef vector<double>::size_type sz;
+  for (sz i = 0; i < qzv.size(); i++) {
+    for (sz j = 0; j < qrv.size(); j++) {
+      sfv.push_back(algMosaic.evaluate(sqrt(qrv[j]*qrv[j]+qzv[i]*qzv[i]), 
+                                       atan(qrv[j]/qzv[i])));
+    }
+  }
+}
+                                      
+
 void ModelCalculator::get2DStrFct(double qrlow, double qrhigh , double _qz,
                                   vector<double>& qrv, vector<double>& sfv)
 {
@@ -865,5 +890,25 @@ void saveDoubleColumns(vector<double>& xvec, vector<double>& yvec,
   typedef vector<double>::size_type vec_sz;
   for (vec_sz i = 0; i < xvec.size(); i++) {
     myfile << xvec[i] << " " << yvec[i] << endl;
+  }
+}
+
+
+void saveMatrix(vector<double>& xv, vector<double>& yv, vector<double>& zv,
+                const char *filename)
+{
+  cout << "xv.size(): " << xv.size() << " yv.size(): " << yv.size() 
+       << "zv.size(): " << zv.size() << endl;
+  if (xv.size()*yv.size() != zv.size()) {
+    cerr << "\nzv.size() is not equal to xv.size()*yv.size()\n" << endl;
+    return;
+  }
+  ofstream myfile;
+  myfile.open(filename);
+  typedef vector<double>::size_type vec_sz;
+  for (vec_sz i = 0; i < yv.size(); i++) {
+    for (vec_sz j = 0; j < xv.size(); j++) {
+      myfile << xv[j] << " " << yv[i] << " " << zv[j+xv.size()*i] << endl;
+    }
   }
 }
