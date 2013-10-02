@@ -20,6 +20,7 @@ public:
   void buildInterpolant(const std::vector<double>&, const std::vector<double>&);
   double evaluate(double, double);
 private:
+  double xMin, xMax, yMin, yMax;
   double maxdx, max_dy; //maximum seperation between neighbouring points 
   double mindx, min_dy; //minimum seperation between neighbouring points 
   double abserr; //absolute error tolerance

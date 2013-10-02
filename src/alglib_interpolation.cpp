@@ -4,13 +4,14 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <stdexcept>
 #include "alglib/src/stdafx.h"
 #include "alglib/src/interpolation.h"
 #include "alglib_interpolation.h"
 
 using namespace alglib;
-using std::vector; using std::queue;
-
+using std::vector; using std::queue; using std::domain_error;
+using std::cout; using std::endl;
 
 
 /******************************************************************************
@@ -42,7 +43,7 @@ void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid,
 void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid,
                                             const vector<double>& ygrid,
                                             const vector<double>& fvalue)
-{
+{  
   typedef vector<double>::size_type sz;
   sz sizex = xgrid.size();
   sz sizey = ygrid.size();
@@ -54,20 +55,31 @@ void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid,
 
   for (sz i = 0; i < sizex; i++) _x[i] = xgrid[i];
   for (sz i = 0; i < sizey; i++) _y[i] = ygrid[i];
-  for (sz i = 0; i < sizef; i++) _f[i] = fvalue[i];
+  //for (sz i = 0; i < sizef; i++) _f[i] = fvalue[i];
+  for (sz i = 0; i < sizef; i++) {
+    _f[i] = fvalue[i];
+    if (fvalue[i] < 0) cout << fvalue[i] << endl;
+  }
 
   xarray.setcontent(sizex, _x);
   yarray.setcontent(sizey, _y);
   farray.setcontent(sizef, _f);
-  spline2dbuildbicubicv(xarray, sizex, yarray, sizey, farray, 1, spline);
+  //spline2dbuildbicubicv(xarray, sizex, yarray, sizey, farray, 1, spline);
+  spline2dbuildbilinearv(xarray, sizex, yarray, sizey, farray, 1, spline);
+  xMin = xgrid[0];
+  xMax = xgrid.back();
+  yMin = ygrid[0];
+  yMax = ygrid.back();
 }
-
-
-
 
 
 double Alglib_CubicSpline2D::evaluate(double vx, double vy)
 {
+  if (vx > xMax || vx < xMin) {
+    throw domain_error("The requested x value is outside of the range.");
+  } else if ( vy > yMax || vy < yMin) {
+    throw domain_error("The requested y value is outside of the range.");
+  }
   return spline2dcalc(spline, vx, vy);
 }
 

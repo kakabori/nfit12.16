@@ -16,9 +16,12 @@
 #include <errno.h>
 #include <stdexcept>
 #include <algorithm>
+#include <time.h>
 
 #include "globalVariables.h"
 #include "modelcalculator.h"
+#include "fileTools.h"
+
 
 using std::string; using std::ifstream; using std::getline; 
 using std::istringstream;
@@ -36,8 +39,8 @@ const double NEGLIGIBLE_MOSAIC = 0.001 * PI / 180; // in radian
 const double NEGLIGIBLE_BEAM_SIZE = 0.1; // in pixel
 const double QMIN = 0.02; // in invrse-Angstrom
 const double QSTEP = 0.001;
-const double THETAMAX = PI / 3; 
-const double THETASTEP = 0.1 * PI / 180; // in radian
+const double THETAMAX = PI / 2.5; 
+const double THETASTEP = 1 * PI / 180; // in radian
 const double QRSTEP = 0.001;
 const double QZSTEP = 0.001;
 
@@ -172,6 +175,8 @@ void ModelCalculator::init(double qxMax, double qzMax)
     buildInterpForMosaicStrFct(sqrt(qrMax*qrMax+qzMax*qzMax), THETAMAX);
   } else {
     buildInterpForStrFct(qrMax, qzMax);
+    cout << "finished StrFct: " << clock()*1e-6 << " " << qrMax << " " 
+         << qzMax << endl;
   }
 }
 
@@ -190,6 +195,8 @@ void ModelCalculator::buildInterpForMosaicStrFct(double qMax, double thetaMax)
 {
   // The structure factor map must span in both qr and qz up to qMax
   buildInterpForStrFct(qMax, qMax);
+  cout << "finished StrFct: " << clock()*1e-6 << " " << qMax << " " 
+       << qMax << endl;
   
   vector<double> qvec;
   vector<double> thetavec;
@@ -202,8 +209,8 @@ void ModelCalculator::buildInterpForMosaicStrFct(double qMax, double thetaMax)
     thetavec.push_back(th);
     th += THETASTEP;
   }
-  
   algMosaic.buildInterpolant(qvec, thetavec);
+  cout << "finished algMosaic: " << clock()*1e-6 << endl;
 }
 
 
@@ -244,6 +251,9 @@ void ModelCalculator::buildInterpForStrFct(double qrMax, double qzMax)
   }
   
   algStrFct.buildInterpolant(qrvec, qzvec, qrqzStrFctvec);  
+  
+  saveThreeVectorsToFile(qrvec, qzvec, qrqzStrFctvec, "structure_factor.dat");
+  saveMatrix(qrvec.size(), qzvec.size(), qrqzStrFctvec, "qrqzStrFct.dat");
 }
 
 
@@ -288,7 +298,7 @@ double ModelCalculator::beamConvolutedStrFct(double qx)
   // the integration only goes upto qxMax + 10*beamSigma
   double lowerLimit = qx - 10*beamSigma;
   double upperLimit = qx + 10*beamSigma;
-  gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
+  gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel_low,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
   return result;
 }
@@ -345,7 +355,7 @@ double ModelCalculator::rotated(double qx)
 	F.params = this;
 	double lowerLimit = getLowerLimit(qx, qz);
 	double upperLimit = getUpperLimit(qx, qz);
-	gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
+	gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel_low,
 	                    WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
 	return result;
 }
@@ -377,7 +387,12 @@ Wrapper needed for AlglibCublicSpline2D object, algMosaic
 double ModelCalculator::s_convolveMosaicWrapper(double q, double theta, void *ptr)
 {
   ModelCalculator *p = (ModelCalculator *)ptr;
-  return p->convolveMosaic(q, theta);
+  double ret = p->convolveMosaic(q, theta);
+  if (ret < 0) {
+    cout << "negative mosaic structure factor obtained at "
+         << q << " " << theta << endl;
+  }
+  return ret;
 }
 
 
@@ -398,7 +413,7 @@ double ModelCalculator::convolveMosaic(double q, double theta)
   F.params = this;
   double lowerLimit = -PI/3;
   double upperLimit = PI/3;
-  gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel,
+  gsl_integration_qag(&F, lowerLimit, upperLimit, g_epsabs, g_epsrel_low,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
   return result;
 }
@@ -412,9 +427,18 @@ double ModelCalculator::s_convolveMosaicIntegrand(double theta, void *ptr)
   ModelCalculator *p = (ModelCalculator *)ptr;
   double qr = p->currq * sin(theta-p->currtheta);
   double qz = p->currq * cos(theta-p->currtheta);
-	return p->algStrFct.evaluate(fabs(qr), fabs(qz)) * p->mosaicDist(theta);
+	double ret = p->algStrFct.evaluate(fabs(qr), fabs(qz)) * p->mosaicDist(theta);
+	//if (ret < 0) {
+	  //cout << qr << " " << qz << " " << p->algStrFct.evaluate(fabs(qr), fabs(qz)) << endl;
+	//}
+	return ret;
 }
 
+
+double ModelCalculator::evalStrFct(double qr, double qz)
+{
+  return algStrFct.evaluate(fabs(qr), fabs(qz));
+}
 
 /******************************************************************************
 Mosaic spread distribution. 
@@ -804,8 +828,6 @@ void ModelCalculator::getMosaicStrFct(double qrlow, double qrhigh,
                                       vector<double>& qrv, vector<double>& qzv,
                                       vector<double>& sfv)
 {
-  init(qrhigh, qzhigh);
-  
   for (double qr = qrlow; qr < qrhigh; ) {
     qrv.push_back(qr);
     qr += 0.001;
@@ -814,12 +836,26 @@ void ModelCalculator::getMosaicStrFct(double qrlow, double qrhigh,
     qzv.push_back(qz);
     qz += 0.001;
   }
-  
+  init(qrv.back(), qzv.back());
   typedef vector<double>::size_type sz;
   for (sz i = 0; i < qzv.size(); i++) {
     for (sz j = 0; j < qrv.size(); j++) {
-      sfv.push_back(algMosaic.evaluate(sqrt(qrv[j]*qrv[j]+qzv[i]*qzv[i]), 
-                                       atan(qrv[j]/qzv[i])));
+      try {
+        if (mosaic > NEGLIGIBLE_MOSAIC) {
+          sfv.push_back(algMosaic.evaluate(sqrt(qrv[j]*qrv[j]+qzv[i]*qzv[i]), 
+                                         atan(qrv[j]/qzv[i])));
+        } else {
+          sfv.push_back(algStrFct.evaluate(qrv[j], qzv[i]));
+        }
+      } catch (exception& e) {
+        cout << e.what() << endl;
+        if (mosaic > NEGLIGIBLE_MOSAIC) {
+          cout << "vx: " << sqrt(qrv[j]*qrv[j]+qzv[i]*qzv[i]) << " " 
+               << "vy: " << atan(qrv[j]/qzv[i]) << endl;
+        } else {
+          cout << "vx: " << qrv[j] << " " << "vy: " << qzv[i] << endl;
+        }
+      }
     }
   }
 }
@@ -875,40 +911,32 @@ void ModelCalculator::getHr(double rlow, double rhigh,
 }
 
 
-void saveDoubleColumns(vector<double>& xvec, vector<double>& yvec, 
-                       const char *filename)
+void ModelCalculator::read_struct_factor(const char *filename)
 {
-  cout << "xvec.size(): " << xvec.size() << " yvec.size(): " << yvec.size() 
-       << endl;
-  if (xvec.size() != yvec.size()) {
-    cerr << "\nThe size of input vectors must be identical for " 
-         << "saveDoubleColumns function to work\n" << endl;
-    return;
-  }
-  ofstream myfile;
+  vector<double> qrvec, qzvec, qrqzStrFctvec;
+  ifstream myfile;
   myfile.open(filename);
-  typedef vector<double>::size_type vec_sz;
-  for (vec_sz i = 0; i < xvec.size(); i++) {
-    myfile << xvec[i] << " " << yvec[i] << endl;
+  string line;
+  double tmp;
+  
+  getline(myfile, line);
+  istringstream iss(line);
+  while (iss >> tmp) {
+    qrvec.push_back(tmp);
   }
-}
+  
+  getline(myfile, line);
+  istringstream iss2(line);
+  while (iss2 >> tmp) {
+    qzvec.push_back(tmp);
+  }
+  
+  getline(myfile, line);
+  istringstream iss3(line);
+  while (iss3 >> tmp) {
+    qrqzStrFctvec.push_back(tmp);
+    //if (tmp < 1e3) cout << tmp << endl;
+  }
 
-
-void saveMatrix(vector<double>& xv, vector<double>& yv, vector<double>& zv,
-                const char *filename)
-{
-  cout << "xv.size(): " << xv.size() << " yv.size(): " << yv.size() 
-       << "zv.size(): " << zv.size() << endl;
-  if (xv.size()*yv.size() != zv.size()) {
-    cerr << "\nzv.size() is not equal to xv.size()*yv.size()\n" << endl;
-    return;
-  }
-  ofstream myfile;
-  myfile.open(filename);
-  typedef vector<double>::size_type vec_sz;
-  for (vec_sz i = 0; i < yv.size(); i++) {
-    for (vec_sz j = 0; j < xv.size(); j++) {
-      myfile << xv[j] << " " << yv[i] << " " << zv[j+xv.size()*i] << endl;
-    }
-  }
+  algStrFct.buildInterpolant(qrvec, qzvec, qrqzStrFctvec);
 }

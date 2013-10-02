@@ -39,5 +39,6 @@ double g_spHrMaxdx = 100000;
 //For qag routine
 //int g_workspaceSize = 10000; //workspace size
 double g_epsabs = 0; //absolute error tolerance
-double g_epsrel = 1e-8; //relative error tolerance
+double g_epsrel = 1e-8; //relative error tolerance for oscillatory integrand
+double g_epsrel_low = 1e-4; // relative error tolerance for non-oscilattor integrand
 //int g_key = 6; //key

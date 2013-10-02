@@ -42,6 +42,7 @@ extern double g_spHrMaxdx;
 //extern int g_workspaceSize; //workspace size
 extern double g_epsabs; //absolute error tolerance
 extern double g_epsrel; //relative error tolerance
+extern double g_epsrel_low;
 //extern int g_key; //key
 
 #endif

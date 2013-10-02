@@ -14,6 +14,13 @@ using std::vector; using std::string; using std::ifstream;
 using std::getline; using std::istringstream; using std::ofstream;
 using std::cout; using std::endl; using std::cerr;
 
+void saveDoubleColumns(std::vector<double>&, std::vector<double>&, const char *);
+void saveMatrix(std::vector<double>&, std::vector<double>&, 
+                std::vector<double>&, const char *);
+void saveMatrix(unsigned int, unsigned int, std::vector<double>&, const char *);
+void saveThreeVectorsToFile(std::vector<double>&, std::vector<double>&,
+                            std::vector<double>&, const char *);
+
 /******************************************************************************
 Read an ASCII formatted matrix into the input 1D vector, vec. 
 Returns the total number of columns. The total number of rows

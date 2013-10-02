@@ -20,9 +20,6 @@
 
 double bessel_J0(double x);
 enum Var stringToVarEnum(const std::string &);
-void saveDoubleColumns(std::vector<double>&, std::vector<double>&, const char *);
-void saveMatrix(std::vector<double>&, std::vector<double>&, 
-                std::vector<double>&, const char *);
 
 /******************************************************************************
 ModelCalculator class: 
@@ -98,6 +95,8 @@ public:
   void getMosaicStrFct(double, double, double, double, std::vector<double>&, 
                        std::vector<double>&, std::vector<double>&);
   void getCCDStrFct(double, double, double, std::vector<double>&, std::vector<double>&);
+  void read_struct_factor(const char *);
+  double evalStrFct(double, double);
 private:
   double Kc, B, dspacing, T;
   double avgLr, avgMz;
