@@ -34,6 +34,7 @@ void FuncLmdif::setPara(Para *p)
   }
 }
 
+
 /****************************************************************************************
 This function logs the combination of parameters that yields the optimal
 chi squared value, along with the corresponding chi squared value.
@@ -48,6 +49,7 @@ void FuncLmdif::logBest(double chisq, char *chain)
   sprintf(bestChain, "Best values: %s", chain);
 }
 
+
 /****************************************************************************************
 This function retirieves the combination of parameters that yielded the
 optimal chi squared value, along with the corresponding chi squared value.
@@ -60,6 +62,7 @@ double FuncLmdif::recoverBestParams(Para *p)
   }
   return bestChisq;
 }
+
 
 /****************************************************************************************
 This function returns a string reporting the optimal value for each
@@ -79,14 +82,16 @@ n < m
 m: an input variable set to the number of functions (= number of data points)
 n: an input variable set to the number of variables (= number of free parameters)
 par: an array of length n. On input par must contain an initial estimate of the
-solution vector. On output par contains the final estimate of the solution vector.
-fvec: an output array of length m which contains the functions evaluated at the output x.
-
+solution vector. On output par contains the final estimate of the solution 
+vector.
+fvec: an output array of length m which contains the functions evaluated at the 
+output x.
 **************************************************************************************************/
 int FuncLmdif::WrapperFunclmdif(int m, int n, double *par, double *fvec, void *client, void* ctrl)
 {
   return ((FuncLmdif*)client)->funclmdif(m, n, par, fvec, ctrl);
 }
+
 
 /**************************************************************************************************
 This function calculates the sum of squares
@@ -136,128 +141,32 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
   }
 
   fflush(stdout);
+  
+  // initiate building the structure factor map
+  mc->init()
+  
+  // mc.init() calculate up to mosaic convoluted 2D map
+  // big calculation is finished. now, do small one slice by slice
+  // for each qz value
 
-  /*Set up the multithreaded calculation of chi squared. If the number of
-    slices, then the number of threads should simply be set to the number of
-    slice. Prepare the threads and structures containing additional tools
-    needed by the worker threads.
-  */
-  if(nslice < (unsigned int) nthreads) nthreads = nslice;
-
-  threadPars = (MCThreadPars **) malloc(nthreads*sizeof(MCThreadPars *));
-  threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t));
-
-  /*Determine the number of slices given to the first n - 1 worker threads,
-    given n total worker threads. This policy is designed to guarantee that
-    the final thread does not take on a signficantly different number of
-    slices, thus preventing overcrowding in some threads and under-utilization
-    of others.
-  */
-  iterChunk = nslice / nthreads;
-  if((nslice % nthreads) > (nthreads / 2)) iterChunk ++;
-  //Get the slice width so it can be known how to divide up the fvec array
-  //amongst the threads.
-  sliceWidth = data->qs[0].sdata.size();
-
-  for(i = 0; i < nthreads; i++){
-    threadPars[i] = (MCThreadPars *) malloc(sizeof(MCThreadPars));
-  }
-
-  /*Prepare the data needed for each thread. Each thread must have its own
-    ModelCalculator object because in calculating theoretical values, certain
-    variables used by a ModelCalculator object are set for a specific qz value.
-    Further, tell the thread the first and last qz slices it should consider.
-    Also give each thread a reference to the fitting parameter information and
-    the experimental values stored within the Data data structure, which is
-    helpfully named data.
-  */
-  for(i = 0; i < nthreads; i ++){
-    minIter = i * iterChunk;
-    maxIter = (i < nthreads - 1) ? minIter + iterChunk - 1 : nslice - 1;
-    threadPars[i]->minIter = minIter;
-    threadPars[i]->maxIter = maxIter;
-    threadPars[i]->fvec = fvec + i * iterChunk * sliceWidth;
-    threadPars[i]->m = m;
-    myMC = (i) ? new ModelCalculator(*mc) : mc;
-    threadPars[i]->myMC = myMC;
-    threadPars[i]->data = data;
-    threadPars[i]->para = para;
-    pthread_create(&threads[i], NULL, &FuncLmdif::modelCalcThread, (void *) threadPars[i]);
-  }
-  //Join each worker thread to the parent to ensure that the parent waits for
-  //all worker threads to finish before continuing.
-  for(i = 0; i < nthreads; i ++){
-    pthread_join(threads[i], NULL);
-  }
-  //Reap chi squared values calculated by each thread, then free all unneeded
-  //data structures.
-  for(i = 0; i < nthreads; i ++){
-    sum += threadPars[i]->mySum;
-    if(threadPars[i]->m == -1) m = -1;
-    if(i){
-      myMC = threadPars[i]->myMC;
-      myMC->cleanup();
-      free(myMC);
-    }
-    free(threadPars[i]);
-  }
-
-  free(threadPars);
-  free(threads);
-
-  //Finalize the chi squared caluclation and report current parameter values.
-  chisq = sum/m;
-  printf("Xr: %g  / %d = %g  /  %g \n",sum,m, chisq,backgroundSigmaSquare); fflush(stdout);
-  sprintf(chain, "%s Xr: %g  / %d = %g ", chain, sum, m, chisq);
-  updatelinks(chisq, chain);
-  if(chisq < bestChisq) logBest(chisq, chain);
-  // update associated image with 'data'
-  data->writeimg();
-  data->writefrm((char *) "frm.dat", para);
-
-  /*
-  // update paramArray, which is a TCL global variable, whose elements are
-  // linked to the fitting panel entry fields
-  Tcl_Interp *interp = NKinterp;
-  std::ostringstream strs;
-  for (int i = 0; i < Para::s_numParams; i++) {
-    strs << g_ParaStuct.getValue(i);
-    std::string newValue = strs.str();
-    Tcl_SetVar2(interp, "paramArray", Varname[i], newValue.c_str(), TCL_GLOBAL_ONLY);
-  }
-  */
-
-  return 0;
-}
-
-/****************************************************************************************
-This function is run within a worker thread to calculate a chi sqared value
-for a subset of all slices being fit.
-****************************************************************************************/
-void* FuncLmdif::modelCalcThread(void *args){
-  MCThreadPars *myPars = (MCThreadPars *) args;
-  ModelCalculator *myMC = myPars->myMC;
-  Data *data = myPars->data;
-  Para *para = myPars->para;
-  size_t minIter = myPars->minIter;
-  size_t maxIter = myPars->maxIter;
-  double *fvec = myPars->fvec;
-  int m = myPars->m;
-  size_t i;
+  // tell mc which slice to calculation for this iteration
+  //my->setSliceParameter( para->setup.getqz(data->qs[i].qz) );
+  // specify the qx range for model calculation
+  for (i = minIter; i <= maxIter; i++) {
+  it = data->qs[i].sdata.begin();
+  itend = data->qs[i].sdata.end();
+  mc->qxSlice(para->setup.getqr((itend-1)->qx)
+  
   double sum1=0,sum2=0, sum3=0, sum4 =0, sum5= 0, sum=0,scale, bias;
   vector<DataPoint>::iterator it;
   vector<DataPoint>::iterator itend;
 
-  for (i = minIter; i <= maxIter; i++) {
-    /* iterate through all the slices */
+}
+  
 
-    // tell mc which slice to calculation for this iteration
-    myMC->setSliceParameter( para->setup.getqz(data->qs[i].qz) );
+  
 
-    // specify the qx range for model calculation
-    it = data->qs[i].sdata.begin();
-    itend = data->qs[i].sdata.end();
-    myMC->QxSlice( para->setup.getqr(it->qx), para->setup.getqr((itend-1)->qx) );
+    
 
     /* Obtain linear parameters c(z) background adjustment and
 	the overall scale s(z) that appear in Eq. 5.1 and Eq. 2.1,
@@ -328,5 +237,47 @@ void* FuncLmdif::modelCalcThread(void *args){
     }
   }
   myPars->mySum = sum;
+
+
+
+
+
+  //Finalize the chi squared caluclation and report current parameter values.
+  chisq = sum/m;
+  printf("Xr: %g  / %d = %g  /  %g \n",sum,m, chisq,backgroundSigmaSquare); fflush(stdout);
+  sprintf(chain, "%s Xr: %g  / %d = %g ", chain, sum, m, chisq);
+  updatelinks(chisq, chain);
+  if(chisq < bestChisq) logBest(chisq, chain);
+  // update associated image with 'data'
+  data->writeimg();
+  data->writefrm((char *) "frm.dat", para);
+
+
+  return 0;
+}
+
+
+/****************************************************************************************
+This function is run within a worker thread to calculate a chi sqared value
+for a subset of all slices being fit.
+****************************************************************************************/
+void* FuncLmdif::modelCalcThread(void *args){
+  MCThreadPars *myPars = (MCThreadPars *) args;
+  ModelCalculator *myMC = myPars->myMC;
+  Data *data = myPars->data;
+  Para *para = myPars->para;
+  size_t minIter = myPars->minIter;
+  size_t maxIter = myPars->maxIter;
+  double *fvec = myPars->fvec;
+  int m = myPars->m;
+  size_t i;
+
+
+  
+
+
+
+
+
   return NULL;
 }

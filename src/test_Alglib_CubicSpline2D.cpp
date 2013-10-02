@@ -2,6 +2,23 @@
 #include <vector>
 #include <iostream>
 using namespace std;
+
+/*
+This tests interpolation object. svf holds values of the structure factor
+at points (qr, qz), that is, S(qr,qz). qr ranges from 0 to 0.003 and 
+qz from 0.061 to 0.064. Use mc.evaluate(qr,qz) to see whether the interpolation
+scheme implemented in mc gives back something reasonable. As of 9/30/2013,
+alglib's cubic spline 2D does not work.
+ 
+sfv[0] = S(qrv[0],qzv[0])
+sfv[1] = S(qrv[1],qzv[0])
+.
+.
+sfv[4] = S(qrv[0],qzv[1])
+.
+.
+etc.
+*/
 int main()
 {
   Alglib_CubicSpline2D mc;

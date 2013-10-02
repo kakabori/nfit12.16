@@ -44,6 +44,7 @@ const double THETASTEP = 1 * PI / 180; // in radian
 const double QRSTEP = 0.001;
 const double QZSTEP = 0.001;
 
+
 ModelCalculator::ModelCalculator()
 {
   //Turn off the error handler in gsl_integration_qag
