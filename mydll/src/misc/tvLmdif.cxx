@@ -356,7 +356,7 @@ int Lmdif::fit(){
 			for(j=0;j<n;j++){
 				x[j]=wa2[j];
 				wa2[j]=diag[j]*x[j];
-				printf("x[%d] = %g\n", j, x[j]);
+				//printf("x[%d] = %g\n", j, x[j]);
 			}
 			for(i=0;i<m;i++) fvec[i]=wa4[i];
 			xnorm=enorm(n,wa2);

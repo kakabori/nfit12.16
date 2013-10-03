@@ -137,9 +137,9 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
   itend = data->qs[nslice-1].sdata.end();
   double qxmax = para->setup.getqr( (itend-1)->qx );
   double qzmax = para->setup.getqz(data->qs[nslice-1].qz);
-  cout << "qzmin: " << qzmin << endl;
-  cout << "qxmax: " << qxmax << endl;
-  cout << "qzmax: " << qzmax << endl;
+  //cout << "qzmin: " << qzmin << endl;
+  //cout << "qxmax: " << qxmax << endl;
+  //cout << "qzmax: " << qzmax << endl;
   // initiate building the 2D structure factor map
   mc->init(0, qxmax, qzmin, qzmax);
   
@@ -151,8 +151,8 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
     itend = data->qs[i].sdata.end();
     double qxmax_tmp = para->setup.getqr((itend-1)->qx);
     double qz_tmp = para->setup.getqz(data->qs[i].qz);
-    cout << "qxmax_tmp: " << qxmax_tmp << endl;
-    cout << "qz_tmp: " << qz_tmp << endl;
+    //cout << "qxmax_tmp: " << qxmax_tmp << endl;
+    //cout << "qz_tmp: " << qz_tmp << endl;
     mc->qxSlice(qxmax_tmp, qz_tmp);
     sum1 = sum2 = sum3 = sum4 = sum5 = 0;
 
@@ -173,7 +173,7 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
       // sum5 = S
       double qx_tmp = para->setup.getqr(it->qx);
       vcal = mc->getCCDStrFct(qx_tmp);
-      cout << qx_tmp << " " << qz_tmp << " " << vcal << endl;
+      //cout << qx_tmp << " " << qz_tmp << " " << vcal << endl;
       sigma2 = it->sigma * it->sigma;
       sum1 += it->inte * vcal / sigma2;
       sum2 += vcal * vcal / sigma2;

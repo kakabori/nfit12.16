@@ -242,7 +242,7 @@ void ModelCalculator::buildInterpForStrFct(double qrMin, double qrMax,
   vector<double> qzvec;
   vector<double> qrqzStrFctvec;
   
-  cout << qrMin << " " << qrMax << " " << qzMin << " " << qzMax << endl;
+  //cout << qrMin << " " << qrMax << " " << qzMin << " " << qzMax << endl;
 
   for (double qr = qrMin; qr < qrMax+QRSTEP;) {
     qrvec.push_back(qr);
@@ -255,16 +255,16 @@ void ModelCalculator::buildInterpForStrFct(double qrMin, double qrMax,
   
   typedef vector<double>::size_type sz;
   for (sz i = 0; i < qzvec.size(); i++) {
-    cout << "Working on qz = " << qzvec[i] << " ..." << endl;
+    //cout << "Working on qz = " << qzvec[i] << " ..." << endl;
     qrSlice(qrvec.back(), qzvec[i]);
     for (sz j = 0; j < qrvec.size(); j++) {
       qrqzStrFctvec.push_back(exp(spStrFct.val(log(fabs(qrvec[j])+SMALLNUM))));
     }
   }
 
-  saveThreeVectorsToFile(qrvec, qzvec, qrqzStrFctvec, "structure_factor.dat");
-  saveMatrix(qrvec.size(), qzvec.size(), qrqzStrFctvec, "qrqzStrFct.dat");
-  saveMatrix(qrvec, qzvec, qrqzStrFctvec, "structure_factor.ssg");
+  //saveThreeVectorsToFile(qrvec, qzvec, qrqzStrFctvec, "structure_factor.dat");
+  //saveMatrix(qrvec.size(), qzvec.size(), qrqzStrFctvec, "qrqzStrFct.dat");
+  //saveMatrix(qrvec, qzvec, qrqzStrFctvec, "structure_factor.ssg");
   
   algStrFct.buildInterpolant(qrvec, qzvec, qrqzStrFctvec);  
 }
@@ -500,8 +500,8 @@ double ModelCalculator::s_StrFctWrapper(double logqr, void *ptr)
   double tmpQr = fabs(exp(logqr) - SMALLNUM);
   double ret = p->StrFct(tmpQr);
   if (ret < 0) {
-    cout << "\nNegative structure factor was obtained at" << endl;
-    cout << "qr: " << p->currqr << " qz: " << p->qz << " Value: " << ret << endl;
+    cout << "\nNegative structure factor was obtained at" << endl
+         << "qr: " << p->currqr << " qz: " << p->qz << " Value: " << ret << endl;
     cout << p->Kc << " " << p->B << " " << p->avgLr << " " << p->avgMz << " "
          << p->dspacing << " " << p->T << " " << p->wavelength << endl;
     cout << "Recalculate the structure factor at +/- 0.0005 of the current qr\n"

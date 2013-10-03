@@ -83,11 +83,13 @@ void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid,
 double Alglib_CubicSpline2D::evaluate(double vx, double vy)
 {
   if (vx > xMax || vx < xMin) {
+    cout << "vx: " << vx << " xMin: " << xMin << " xMax: " << xMax << endl;
     throw domain_error("The requested x value is outside of the range.");
   } else if ( vy > yMax || vy < yMin) {
     cout << "vy: " << vy << " yMin: " << yMin << " yMax: " << yMax << endl;
     throw domain_error("The requested y value is outside of the range.");
   }
+  
   return spline2dcalc(spline, vx, vy);
 }
 
