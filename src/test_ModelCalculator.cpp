@@ -12,6 +12,54 @@ using namespace std;
 #define SMALLNUM 0.00000000001
 
 
+void createCCDStrFct()
+{
+  ModelCalculator mc;
+	mc.read_in_utable("../dat/utab_nfit12.15.dat");
+	
+  // Do not change the following parameters
+	mc.setModelParameter(6e-13, "Kc");
+	mc.setModelParameter(2e13, "B");
+	mc.setModelParameter(62.8, "D");
+	mc.setModelParameter(37, "T");
+	mc.setModelParameter(5000, "Lr");
+	mc.setModelParameter(10, "Mz");
+	mc.setModelParameter(0.0134, "edisp");
+	mc.setModelParameter(0.06, "mosaic");
+	mc.setModelParameter(1.175, "wavelength");
+	mc.setModelParameter(0.07113, "pixelSize");
+	mc.setModelParameter(2.3, "bFWHM");
+	mc.setModelParameter(360, "s");
+	
+	vector<double> qxvec, qzvec, sfvec;
+	double qxmin = 0;
+	double qxmax = 0.0644496;
+	double qzmin = 0.0449959;
+	double qzmax = 0.0562851;
+	mc.init(qxmin, qxmax, qzmin, qzmax);
+	cout << mc.evalStrFct(qxmax, qzmax) << endl;
+	
+	for (double qz = qzmin; qz < qzmax; ) {
+	  qzvec.push_back(qz);
+	  qz += 0.001;
+	}
+	for (double qx = qxmin; qx < qxmax; ) {
+	  qxvec.push_back(qx);
+	  qx += 0.001;
+	}
+
+	for (size_t i = 0; i < qzvec.size(); i++) {
+	  mc.qxSlice(qxmax, qzvec[i]);
+	  for (size_t j = 0; j < qxvec.size(); j++) {
+	    sfvec.push_back(mc.getCCDStrFct(qxvec[j]));
+	  }
+	}
+
+	saveMatrix(qxvec.size(), qzvec.size(), sfvec, "CCD_structure_factor_test.dat");
+	saveMatrix(qxvec, qzvec, sfvec, "CCD_structure_factor_test.ssg");		
+}
+
+
 void testCCDStrFct()
 {
   ModelCalculator mc;
@@ -96,7 +144,7 @@ void testMosaicStrFct()
 	mc.setModelParameter(360, "s");
 
 	vector<double> qvec, sfvec;
-	mc.getMosaicStrFct(0, 0.2, 0.2, qvec, sfvec);
+	mc.getMosaicStrFct(0, 0.1, 0.1, qvec, sfvec);
 	
 	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
 		cout << qvec[i] << " " << sfvec[i] << endl;
@@ -127,7 +175,7 @@ void test1DStrFct()
 	mc.setModelParameter(360, "s");
 
 	vector<double> qvec, sfvec;
-	mc.getStrFct(0, 0.2, 0.2, qvec, sfvec);
+	mc.getStrFct(0, 0.6, 0.017, qvec, sfvec);
 	
 	for (vector<double>::size_type i = 0; i < qvec.size(); i++) {
 		cout << qvec[i] << " " << sfvec[i] << endl;
@@ -136,6 +184,13 @@ void test1DStrFct()
 	cout << "qz: " << 0.2 << endl;
 	cout << "# of points calculated: " << qvec.size() << endl;
 	saveDoubleColumns(qvec, sfvec, "test_struct_factor.dat");
+	
+	vector<double> x, y;
+	mc.get_spStrFctPoints(x, y);
+	cout << "===========================" << endl;
+	for (vector<double>::size_type i = 0; i < x.size(); i++) {
+	  cout << exp(x[i])-SMALLNUM << " " << exp(y[i]) << endl;
+	}
 }
 
 
@@ -250,7 +305,7 @@ void create2DStrFctWithoutMosaic()
 	mc.setModelParameter(360, "s");
 
 	vector<double> qrvec, qzvec, sfvec;
-	mc.getMosaicStrFct(0, 0.15, 0.05, 0.15, qrvec, qzvec, sfvec);
+	mc.getMosaicStrFct(0, 0.55, 0.05, 0.25, qrvec, qzvec, sfvec);
 
 	saveMatrix(qrvec, qzvec, sfvec, "no_mosaic.ssg");
 	saveMatrix(qrvec.size(), qzvec.size(), sfvec, "no_mosaic.dat");
@@ -325,7 +380,8 @@ int main()
   //testCCDStrFct();
   //create2DStrFctWithoutMosaic();
   //create2DStrFctWithMosaic();
-  testConvolveMosaic();
+  createCCDStrFct();
+  //testConvolveMosaic();
 	return 0;
 }
 

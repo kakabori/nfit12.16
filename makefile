@@ -1,7 +1,7 @@
 _OBJS =	boxchain.o dataset.o funclmdif.o funsupport.o globalVariables.o \
         modelcalculator.o nrutil.o Para.o toad.o toadcmd.o toadmisc.o \
         tvds.o tvDSfit.o tvImg.o tvLinfitDriver.o utable.o \
-        fileTools.o
+        fileTools.o alglib_interpolation.o
 
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
@@ -16,8 +16,8 @@ BLT = BLT
 
 CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread -g
 CLINK = -lm -l$(TCL) -l$(TK) -ltiff -l$(BLT) -lpthread -lmydll \
-        -lgsl -lgslcblas -Wl,-rpath,.
-CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I.
+        -lgsl -lgslcblas -Wl,-rpath,. -lalglib
+CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I. -I../
 
 all: libtoad toad
 

@@ -49,9 +49,9 @@ public:
 	// functions to build the interpolating function for the structure factor
 	void qxSlice(double, double);
 	void buildInterpForRotatedStrFct(double, double);
-	void init(double, double);
-	void buildInterpForMosaicStrFct(double, double);
-	void buildInterpForStrFct(double, double);
+	void init(double, double, double, double);
+	void buildInterpForMosaicStrFct(double, double, double, double);
+	void buildInterpForStrFct(double, double, double, double);
 	void qrSlice(double, double);
 	void setSliceParameter(double qz);
 	double getCCDStrFct(double); 

@@ -14,6 +14,7 @@ See tvds.h for qz<--pz
 
 using namespace std;
 
+
 /*  Intermediate steps */
 double TvDs2::getl(double theta, double dspacing){//take the order num; return in pixel unit
   /*given \theta and D, return l (l is defined in the appendix) */
@@ -21,6 +22,7 @@ double TvDs2::getl(double theta, double dspacing){//take the order num; return i
   theta=acos(cos(theta)*nindex); //calc theta_air
   return ((R*cos(theta)+tan(2*theta)*(s+R*sin(theta)))/(cos(alpha)-tan(2*theta)*sin(alpha))+bc2b)/pz;
 }
+
 
 double TvDs2::getSinTheta(double pixel){//length in mm (from beaker center to the pixel position
   /* given pixels, return sin(\theta) */
@@ -32,6 +34,7 @@ double TvDs2::getSinTheta(double pixel){//length in mm (from beaker center to th
   sinTheta=sin(acos( cos(asin(sinTheta))/nindex )); // calc bragg theta from apparent theta
   return sinTheta;
 }
+
 
 /* The two transformations */
 double TvDs2::getqr(double rpix){

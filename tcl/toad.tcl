@@ -13,6 +13,7 @@ set verticalfit 0
 
 source tcl/globalVariables.tcl
 
+
 global rotatehash startflag fittedhash iter aFactor FLICAM
 
 set startflag 0
@@ -64,6 +65,7 @@ foreach graph  $imgWN  {
 	Blt_Crosshairs $graph
 }
 
+
 set w .menu
 frame $w
 set m $w.file.m
@@ -88,7 +90,6 @@ label $w.lsw -text "swath:"
 entry $w.xswath -textvariable tvar_xswath -width 5
 pack $w.file $w.tls $w.win -side left
 pack $w.xswath $w.lsw -side right
-
 label $w.lx -text "x:" -fg red
 label $w.xpos -textvariable tvar_xpos -width 5 -anchor w
 label $w.ly -text "y:" -fg red
@@ -96,16 +97,14 @@ label $w.ypos -textvariable tvar_ypos -width 5 -anchor w
 label $w.li -text "I:" -fg red
 label $w.inte -textvariable tvar_inte -width 7 -anchor w
 pack $w.inte $w.li $w.ypos $w.ly $w.xpos $w.lx -side right
-
 set w .butt
 frame $w
 
-checkbutton $w.b1 -indicatoron 0 -bitmap @bmp/box.bmp -borderwidth 3 \
-            -variable editmode -command {editbox}
-
+checkbutton $w.b1 -indicatoron 0 -bitmap @bmp/box.bmp -borderwidth 3 -variable editmode -command {editbox}
 
 $w.b1 configure -selectcolor [$w.b1 cget -background]
 pack $w.b1 -side top
+
 
 proc miniShell { w } {
         global message

@@ -22,7 +22,7 @@ class TvDs2
 
   */
 
-  double s;
+  double s; // S-distance, or sample-to-detector distance
 
   double bc2b;// x0, beeker center to bottom of ccd
 
@@ -32,7 +32,7 @@ class TvDs2
 
   double wavelength;
 
-  double pz;
+  double pz; // pixel size
 
   double qrzero;
 

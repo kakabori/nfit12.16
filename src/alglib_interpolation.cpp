@@ -1,4 +1,5 @@
 #include <math.h>
+#include <cmath>
 #include <iostream>
 #include <queue>
 #include <vector>
@@ -48,6 +49,7 @@ void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid,
   sz sizex = xgrid.size();
   sz sizey = ygrid.size();
   sz sizef = fvalue.size();
+  //cout << sizex << " "<< sizey << " " << sizef << endl;
   
   double _x[sizex];
   double _y[sizey];
@@ -58,14 +60,19 @@ void Alglib_CubicSpline2D::buildInterpolant(const vector<double>& xgrid,
   //for (sz i = 0; i < sizef; i++) _f[i] = fvalue[i];
   for (sz i = 0; i < sizef; i++) {
     _f[i] = fvalue[i];
-    if (fvalue[i] < 0) cout << fvalue[i] << endl;
+    if (!std::isfinite(fvalue[i])) cout << i << " " << fvalue[i] << endl;
   }
 
   xarray.setcontent(sizex, _x);
   yarray.setcontent(sizey, _y);
   farray.setcontent(sizef, _f);
-  //spline2dbuildbicubicv(xarray, sizex, yarray, sizey, farray, 1, spline);
-  spline2dbuildbilinearv(xarray, sizex, yarray, sizey, farray, 1, spline);
+  
+  try {
+    //spline2dbuildbicubicv(xarray, sizex, yarray, sizey, farray, 1, spline);
+    spline2dbuildbilinearv(xarray, sizex, yarray, sizey, farray, 1, spline);
+  } catch (alglib::ap_error e) {
+    cout << e.msg.c_str() << endl;
+  }
   xMin = xgrid[0];
   xMax = xgrid.back();
   yMin = ygrid[0];
@@ -78,6 +85,7 @@ double Alglib_CubicSpline2D::evaluate(double vx, double vy)
   if (vx > xMax || vx < xMin) {
     throw domain_error("The requested x value is outside of the range.");
   } else if ( vy > yMax || vy < yMin) {
+    cout << "vy: " << vy << " yMin: " << yMin << " yMax: " << yMax << endl;
     throw domain_error("The requested y value is outside of the range.");
   }
   return spline2dcalc(spline, vx, vy);

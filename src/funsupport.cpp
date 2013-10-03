@@ -68,7 +68,9 @@ void FunSupport::_findPoints(double initLeft, double initRight, double initVleft
     vright = recursionQueue.front();
     recursionQueue.pop();
     middle = (left + right) / 2;
-    vmiddle = func( middle, para );
+    vmiddle = func(middle, para);
+    
+    //cout << middle << " " << vmiddle << endl;
 
     //cout << left << " " << middle << " " << right << " "  << vleft << " "  << vmiddle
     //<< " "  << vright << endl;
@@ -97,6 +99,7 @@ void FunSupport::_findPoints(double initLeft, double initRight, double initVleft
     values.*/
   sort(x.begin(), x.end());
   for(iter = x.begin(); iter != x.end(); iter ++) {
+    // Should store the already calculated function value to avoid double calculation
     y.push_back(func(*iter, para));
   }
 }

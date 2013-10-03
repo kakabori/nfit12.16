@@ -12,21 +12,6 @@
 #include "tvImg.h"
 #include "dataset.h"
 
-
-/* This structure holds data for a given fitting thread in a chi squared
-   calculation.
-*/
-struct MCThreadPars{
-  ModelCalculator* myMC; //The distinct ModelCalculator needed for each thread
-  Data *data; // A reference to experimental data
-  Para *para; //A reference to fitting parameter information
-  double mySum;  //The sum to be added to the total chi squared value
-  double *fvec; //The beginning value at which to store residuals
-  size_t minIter; //Index for the first qz slice to consider
-  size_t maxIter; //Index for the final qz slice to consider
-  int m; //The total degrees of freedom
-};
-
 /*
   FuncLmdif collects Data, Para and ModelCalculator objects
   and do optimization

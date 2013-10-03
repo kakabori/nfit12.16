@@ -27,6 +27,10 @@ void saveDoubleColumns(vector<double>& xvec, vector<double>& yvec,
 }
 
 
+/* create sausage formatted file 
+   first column = xv
+   second column = yv
+   third column = zv */
 void saveMatrix(vector<double>& xv, vector<double>& yv, vector<double>& zv,
                 const char *filename)
 {
@@ -47,7 +51,9 @@ void saveMatrix(vector<double>& xv, vector<double>& yv, vector<double>& zv,
   myfile.close();
 }
 
-
+/* create matrix formatted file 
+   xs => number of columns
+   yx => number of rows */
 void saveMatrix(unsigned int xs, unsigned int ys, vector<double>& zv,
                 const char *filename)
 {
