@@ -118,6 +118,8 @@ proc startFit {dataset dupe nocz niter tree node} {
   #puts "paraset disp p"      
   #paraset disp p
   setdata $dataset
+  
+  open_funclmdif_window
   #puts "fitdata d$node mc p $niter"
   fitdata d$node mc p $niter
       

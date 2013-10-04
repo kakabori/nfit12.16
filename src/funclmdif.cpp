@@ -99,7 +99,8 @@ ctrl: ?
 int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 {
   if(stopflag) return 0;
-  printf("funclmdif ");
+  //printf("funclmdif ");
+  Tcl_Eval("show_message funclmdif");
   char chain[256]={0};
   size_t i;
   double sum1, sum2, sum3, sum4, sum5;

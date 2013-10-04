@@ -26,6 +26,6 @@ extern GlobalData gData;
 int main(int argc, char *argv[]){
   printf( " Start main  ");
   gData.interp=Tcl_CreateInterp();
-  Tk_MainEx(argc, argv, Toad_Init,gData.interp);
+  Tk_MainEx(argc, argv, Toad_Init, gData.interp);
   return(0);
 }

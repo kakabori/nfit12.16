@@ -1008,6 +1008,7 @@ proc resetcolor {min max} {
     #puts "img show $iname"
     img show $iname    
 }
+
 colorsetup mode linear
 confwindow
 
@@ -1015,4 +1016,4 @@ source tcl/kiyo.tcl
 source tcl/fittingWindow.tcl
 source tcl/fileManage.tcl
 source tcl/procedures.tcl
-
+source tcl/display.tcl
