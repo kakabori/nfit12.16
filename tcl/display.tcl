@@ -19,8 +19,8 @@ proc show_log_file {} {
   #if {![winfo exists .funclmdif]} {
   #  open_funclmdif_window
   #}
-  global flw
-  set fileId [open "log.txt" r]
+  global flw pathToad
+  set fileId [open "$pathToad/log.txt" r]
   set data [read $fileId]
   close $fileId
   $flw.text config -state normal
@@ -34,8 +34,8 @@ proc insert_buffer_file {} {
   if {![winfo exists .funclmdif]} {
     open_funclmdif_window
   }
-  global flw
-  set fileId [open "buffer.txt" r]
+  global flw pathToad
+  set fileId [open "$pathToad/buffer.txt" r]
   set data [read $fileId]
   close $fileId
   $flw.text config -state normal
@@ -44,7 +44,7 @@ proc insert_buffer_file {} {
   $flw.text config -state disabled
   
   # Empty the content of buffer.txt
-  set fileId [open "buffer.txt" w]
+  set fileId [open "pathToad/buffer.txt" w]
   close $fileId
 }
 

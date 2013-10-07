@@ -40,6 +40,9 @@ using std::cout; using std::endl; using std::string;
 
 extern "C" int Blt_Init(Tcl_Interp *interp);
 
+char logPath[] = "/home/kiyo/programs/nfit12.16/log.txt";
+char bufferPath[] = "/home/kiyo/programs/nfit12.16/buffer.txt";
+
 int FLICAM = 0;
 extern int linkxy;
 extern int nocz, noscale, kiyomask;
@@ -1276,15 +1279,15 @@ void *thread_lmdif(void *s)
 	bestChisq = func->recoverBestParams(&g_ParaStruct);
 	char str[256];
 	sprintf(str, "%s Xr: %g\n", bestChain, bestChisq);
-	appendStringToFile("log.txt", str);
-	appendStringToFile("buffer.txt", str);
+	appendStringToFile(logPath, str);
+	appendStringToFile(bufferPath, str);
   
   updatelinks(bestChisq, bestChain);
   delete lmdif;
   delete func;
   fprintf(ntp->fp, "************************************************************************\n"); fflush(ntp->fp);
-  appendStringToFile("log.txt", "************************************************************************\n");
-  appendStringToFile("buffer.txt", "************************************************************************\n");  
+  appendStringToFile(logPath, "************************************************************************\n");
+  appendStringToFile(bufferPath, "************************************************************************\n");  
   evalTclCommand("insert_buffer_file");
   delete ntp;
   return NULL;
@@ -1487,6 +1490,8 @@ extern "C" int Toad_Init(Tcl_Interp *interp){
   Tcl_LinkVar(interp, "nthreads", (char*)&nthreads, TCL_LINK_INT);
   Tcl_LinkVar(interp, "elapsedMins", (char*)&elapsedMins, TCL_LINK_INT);
   Tcl_LinkVar(interp, "elapsedSecs", (char*)&elapsedSecs, TCL_LINK_INT);
+  
+  //Tcl_LinkVar(interp, "toadPath", (char *)toadPath, TCL_LINK_STRING);
 
 
   Tcl_EvalEx(interp,"image create photo realimg0",-1,TCL_EVAL_GLOBAL);

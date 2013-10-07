@@ -14,6 +14,8 @@ extern void updatelinks(double xisquare, char *chain);
 extern double refine(double theor, double exper);
 extern Para g_ParaStruct;
 extern Tcl_Interp *NKinterp;
+extern char logPath[];
+extern char bufferPath[];
 
 //////////////////////////////////////////////////////////////
 // compute I_e - I_{model} to be used for least square optimization
@@ -102,8 +104,8 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 {
   if(stopflag) return 0;
   //printf("funclmdif ");
-  appendStringToFile("log.txt", "funclmdif ");
-  appendStringToFile("buffer.txt", "funclmdif ");
+  appendStringToFile(logPath, "funclmdif ");
+  appendStringToFile(bufferPath, "funclmdif ");
   char chain[256]={0};
   char cmd[256];
   size_t i;
@@ -126,8 +128,8 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 		  par[k] = fabs(par[k]);
 		  //printf("%g ", par[k]);
 		  sprintf(cmd, "%g ", par[k]);
-		  appendStringToFile("log.txt", cmd);
-		  appendStringToFile("buffer.txt", cmd);
+		  appendStringToFile(logPath, cmd);
+		  appendStringToFile(bufferPath, cmd);
 		  
 		  sprintf(chain, "%s %g ", chain, par[k]);
 		  *(para->xp[k]) = par[k];
@@ -136,8 +138,8 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 		} else {
 			//printf("%g ", par[k]);
 			sprintf(cmd, "%g ", par[k]);
-		  appendStringToFile("log.txt", cmd);
-		  appendStringToFile("buffer.txt", cmd);
+		  appendStringToFile(logPath, cmd);
+		  appendStringToFile(bufferPath, cmd);
 		  
 			sprintf(chain, "%s %g ", chain, par[k]);
 			*(para->xp[k]) = par[k];
@@ -241,8 +243,8 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
   chisq = sum/m;
   //printf("Xr: %g  / %d = %g  /  %g \n",sum,m, chisq,backgroundSigmaSquare);
   sprintf(cmd, "Xr: %g  / %d = %g  /  %g \n", sum, m, chisq, backgroundSigmaSquare);
-  appendStringToFile("log.txt", cmd);
-  appendStringToFile("buffer.txt", cmd);
+  appendStringToFile(logPath, cmd);
+  appendStringToFile(bufferPath, cmd);
   evalTclCommand("insert_buffer_file");
   fflush(stdout);
   sprintf(chain, "%s Xr: %g  / %d = %g ", chain, sum, m, chisq);

@@ -12,12 +12,12 @@ set descending 0
 set verticalfit 0
 
 source tcl/globalVariables.tcl
-
+set pathToad [pwd]
 # prepare a log file
-set fileId [open "log.txt" w]
+set fileId [open "$pathToad/log.txt" w]
 close $fileId
 # prepare a buffer file
-set fileId [open "buffer.txt" w]
+set fileId [open "$pathToad/buffer.txt" w]
 close $fileId
 
 
