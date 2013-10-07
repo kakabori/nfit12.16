@@ -13,6 +13,13 @@ set verticalfit 0
 
 source tcl/globalVariables.tcl
 
+# prepare a log file
+set fileId [open "log.txt" w]
+close $fileId
+# prepare a buffer file
+set fileId [open "buffer.txt" w]
+close $fileId
+
 
 global rotatehash startflag fittedhash iter aFactor FLICAM
 

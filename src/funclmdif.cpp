@@ -8,6 +8,7 @@
 #include "globalVariables.h"
 #include "dataset.h"
 #include "tcl_utility.h"
+#include "fileTools.h"
 
 extern void updatelinks(double xisquare, char *chain);
 extern double refine(double theor, double exper);
@@ -101,7 +102,8 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 {
   if(stopflag) return 0;
   //printf("funclmdif ");
-  evalTclCommand("show_funclmdif \"funclmdif \"");
+  appendStringToFile("log.txt", "funclmdif ");
+  appendStringToFile("buffer.txt", "funclmdif ");
   char chain[256]={0};
   char cmd[256];
   size_t i;
@@ -123,8 +125,9 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 		if (k != Var_bc2b) {
 		  par[k] = fabs(par[k]);
 		  //printf("%g ", par[k]);
-		  sprintf(cmd, "show_funclmdif \"%g \"", par[k]);
-		  evalTclCommand(cmd);
+		  sprintf(cmd, "%g ", par[k]);
+		  appendStringToFile("log.txt", cmd);
+		  appendStringToFile("buffer.txt", cmd);
 		  
 		  sprintf(chain, "%s %g ", chain, par[k]);
 		  *(para->xp[k]) = par[k];
@@ -132,8 +135,10 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 		// bc2b can be negative when the beam is below the detector edge
 		} else {
 			//printf("%g ", par[k]);
-			sprintf(cmd, "show_funclmdif \"%g \"", par[k]);
-		  evalTclCommand(cmd);
+			sprintf(cmd, "%g ", par[k]);
+		  appendStringToFile("log.txt", cmd);
+		  appendStringToFile("buffer.txt", cmd);
+		  
 			sprintf(chain, "%s %g ", chain, par[k]);
 			*(para->xp[k]) = par[k];
 			mc->setpara(par[k], para->idx[k]);
@@ -234,7 +239,11 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
   
   //Finalize the chi squared caluclation and report current parameter values.
   chisq = sum/m;
-  printf("Xr: %g  / %d = %g  /  %g \n",sum,m, chisq,backgroundSigmaSquare); 
+  //printf("Xr: %g  / %d = %g  /  %g \n",sum,m, chisq,backgroundSigmaSquare);
+  sprintf(cmd, "Xr: %g  / %d = %g  /  %g \n", sum, m, chisq, backgroundSigmaSquare);
+  appendStringToFile("log.txt", cmd);
+  appendStringToFile("buffer.txt", cmd);
+  evalTclCommand("insert_buffer_file");
   fflush(stdout);
   sprintf(chain, "%s Xr: %g  / %d = %g ", chain, sum, m, chisq);
   updatelinks(chisq, chain);

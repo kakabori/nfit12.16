@@ -14,6 +14,8 @@ using std::vector; using std::string; using std::ifstream;
 using std::getline; using std::istringstream; using std::ofstream;
 using std::cout; using std::endl; using std::cerr;
 
+void appendStringToFile(const char *, const std::string&);
+void appendStringToFile(const char *, const char *);
 void saveDoubleColumns(std::vector<double>&, std::vector<double>&, const char *);
 void saveMatrix(std::vector<double>&, std::vector<double>&, 
                 std::vector<double>&, const char *);
@@ -27,7 +29,7 @@ Returns the total number of columns. The total number of rows
 can be calculated via vec.size() divided by the function's 
 returned value.
 
-vec[i * width + j] returns the matrix element in ith row and 
+vec[i*width + j] returns the matrix element in ith row and 
 jth column
 ******************************************************************************/
 template <class T>

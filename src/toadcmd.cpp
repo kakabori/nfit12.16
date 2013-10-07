@@ -33,6 +33,7 @@
 #include "utable.h"
 #include "Para.h"
 #include "tcl_utility.h"
+#include "fileTools.h"
 
 
 using std::cout; using std::endl; using std::string;
@@ -1226,7 +1227,7 @@ void *thread_lmdif(void *s)
   double bestChisq;
   pthread_t timerThread; // for the Elapsed Time window
 
-  cout << "iter: " << ntp->iter << endl;
+  //cout << "iter: " << ntp->iter << endl;
   cout << "nthreads: " << nthreads << endl;
   /*
   void Lmdif::setup(LmdifFunc f, int _m, int _n, int _maxfev, double _ftol,
@@ -1273,11 +1274,18 @@ void *thread_lmdif(void *s)
 	// Update the hash table instead of NKparams. Type casting is necessary.
 	//bestChisq = func->recoverBestParams((double*)p);
 	bestChisq = func->recoverBestParams(&g_ParaStruct);
-  printf("%s Xr: %g\n", bestChain, bestChisq);
+	char str[256];
+	sprintf(str, "%s Xr: %g\n", bestChain, bestChisq);
+	appendStringToFile("log.txt", str);
+	appendStringToFile("buffer.txt", str);
+  
   updatelinks(bestChisq, bestChain);
   delete lmdif;
   delete func;
-  fprintf(ntp->fp, "finished\n"); fflush(ntp->fp);
+  fprintf(ntp->fp, "************************************************************************\n"); fflush(ntp->fp);
+  appendStringToFile("log.txt", "************************************************************************\n");
+  appendStringToFile("buffer.txt", "************************************************************************\n");  
+  evalTclCommand("insert_buffer_file");
   delete ntp;
   return NULL;
 }

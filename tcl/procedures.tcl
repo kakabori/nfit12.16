@@ -120,7 +120,14 @@ proc startFit {dataset dupe nocz niter tree node} {
   setdata $dataset
   
   open_funclmdif_window
-  #puts "fitdata d$node mc p $niter"
+  #set fileId [open "buffer.txt" a]
+  #puts $fileId "*******************************************************"
+  #close $fileId
+  #set fileId [open "log.txt" a]
+  #puts $fileId "*******************************************************"
+  #close $fileId
+  #insert_buffer_file
+  
   fitdata d$node mc p $niter
       
   #every 10000 update

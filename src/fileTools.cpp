@@ -2,9 +2,26 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 using std::vector; using std::ofstream; using std::cerr;
-using std::endl; using std::cout;
+using std::endl; using std::cout; using std::string;
+
+
+/* overloaded function, append the input string to log.txt*/
+void appendStringToFile(const char *filename, const char *str)
+{
+  ofstream myfile;
+  myfile.open(filename, std::ios::out | std::ios::app);
+  myfile << str;
+  myfile.close();
+} 
+
+/* overloaded function */
+void appendStringToFile(const char *filename, const string& str)
+{
+  appendStringToFile(filename, str.c_str());
+}
 
 
 void saveDoubleColumns(vector<double>& xvec, vector<double>& yvec, 
