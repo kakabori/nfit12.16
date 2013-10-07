@@ -3,13 +3,14 @@ proc open_funclmdif_window {} {
   toplevel .funclmdif
   set flw .funclmdif
   wm title $flw "funclmdif"
-  text $flw.text -state normal -width 80 -height 10 -yscrollcommand "$flw.scroll set" -cursor arrow
+  text $flw.text -state normal -width 80 -height 10 \
+                 -yscrollcommand "$flw.scroll set" -cursor arrow
   scrollbar $flw.scroll -command "$flw.text yview"
   pack $flw.scroll $flw.text -side right -fill y
 }
 
 
-proc show_warning {msg} {
+proc show_funclmdif {msg} {
   global flw
 	$flw.text insert end $msg
 	$flw.text see end

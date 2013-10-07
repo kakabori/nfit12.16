@@ -1,7 +1,7 @@
 _OBJS =	boxchain.o dataset.o funclmdif.o funsupport.o globalVariables.o \
         modelcalculator.o nrutil.o Para.o toad.o toadcmd.o toadmisc.o \
         tvds.o tvDSfit.o tvImg.o tvLinfitDriver.o utable.o \
-        fileTools.o alglib_interpolation.o
+        fileTools.o alglib_interpolation.o tcl_utility.o
 
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 

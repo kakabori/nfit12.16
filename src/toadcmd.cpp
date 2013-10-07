@@ -32,9 +32,10 @@
 #include "globalVariables.h"
 #include "utable.h"
 #include "Para.h"
+#include "tcl_utility.h"
 
 
-using std::cout; using std::endl;
+using std::cout; using std::endl; using std::string;
 
 extern "C" int Blt_Init(Tcl_Interp *interp);
 
@@ -95,6 +96,10 @@ UpdateStruct *update; //Structure to deliver data to updatelinks_async
 Tcl_AsyncHandler updateHandler;
 Tcl_AsyncHandler resetHandler;
 Tcl_AsyncHandler timerHandler;
+Tcl_AsyncHandler g_commandHandler;
+Tcl_Interp *g_interp;
+string g_string;
+
 
 int colorMIN, colorMAX, colorBOT, colorSAT, colorFIL;
 
@@ -968,6 +973,7 @@ int updateParaObject(ClientData clientData, Tcl_Interp *interp,
   return TCL_OK;
 }
 
+
 /******************************************************************************
 setNFIT
 ******************************************************************************/
@@ -1305,6 +1311,7 @@ functions.
 *****************************************************************************/
 int YF_fitdata(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
+  g_interp = interp;
   NfitThreadPars *s;
   Data *dp;
   ModelCalculator *mc;
@@ -1532,8 +1539,10 @@ extern "C" int Toad_Init(Tcl_Interp *interp){
   updateHandler = Tcl_AsyncCreate(updatelinks_async, NULL);
   resetHandler = Tcl_AsyncCreate(resetFlags_async, NULL);
   timerHandler = Tcl_AsyncCreate(updateTimer_async, NULL);
+  g_commandHandler = Tcl_AsyncCreate(evalTclCommand_async, (ClientData) NULL);
 
-  Tcl_EvalEx(interp,"source tcl/toad.tcl",-1,TCL_EVAL_GLOBAL);
+  char cmd[] = "source tcl/toad.tcl";
+  Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL);
   boxvec.init(interp);
   return TCL_OK;
 }

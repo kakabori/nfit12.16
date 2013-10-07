@@ -7,6 +7,7 @@
 #include "funclmdif.h"
 #include "globalVariables.h"
 #include "dataset.h"
+#include "tcl_utility.h"
 
 extern void updatelinks(double xisquare, char *chain);
 extern double refine(double theor, double exper);
@@ -100,8 +101,9 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
 {
   if(stopflag) return 0;
   //printf("funclmdif ");
-  Tcl_Eval("show_message funclmdif");
+  evalTclCommand("show_funclmdif \"funclmdif \"");
   char chain[256]={0};
+  char cmd[256];
   size_t i;
   double sum1, sum2, sum3, sum4, sum5;
   double scale, bias;  
@@ -120,13 +122,18 @@ int FuncLmdif::funclmdif(int m, int n, double *par, double *fvec, void* ctrl)
     // for variables other than bc2b, don't accept a negative value
 		if (k != Var_bc2b) {
 		  par[k] = fabs(par[k]);
-		  printf("%g ", par[k]);
+		  //printf("%g ", par[k]);
+		  sprintf(cmd, "show_funclmdif \"%g \"", par[k]);
+		  evalTclCommand(cmd);
+		  
 		  sprintf(chain, "%s %g ", chain, par[k]);
 		  *(para->xp[k]) = par[k];
 		  mc->setpara(par[k], para->idx[k]);
 		// bc2b can be negative when the beam is below the detector edge
 		} else {
-			printf("%g ", par[k]);
+			//printf("%g ", par[k]);
+			sprintf(cmd, "show_funclmdif \"%g \"", par[k]);
+		  evalTclCommand(cmd);
 			sprintf(chain, "%s %g ", chain, par[k]);
 			*(para->xp[k]) = par[k];
 			mc->setpara(par[k], para->idx[k]);

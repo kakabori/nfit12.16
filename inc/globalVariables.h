@@ -45,4 +45,8 @@ extern double g_epsrel; //relative error tolerance
 extern double g_epsrel_low;
 //extern int g_key; //key
 
+extern Tcl_AsyncHandler g_commandHandler;
+extern Tcl_Interp *g_interp;
+extern std::string g_string;
+
 #endif
