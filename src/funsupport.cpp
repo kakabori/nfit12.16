@@ -18,8 +18,8 @@ bool compare(const Two_Doubles& x, const Two_Doubles& y)
 }
 
 
+// initialize pointers to indicate that memory has not been allocated
 FunSupport::FunSupport(){
-  // initialize pointers to indicate that memory has not been allocated
   acc = NULL;
   spline = NULL;
   setSplineTypeToCubic();
@@ -28,7 +28,6 @@ FunSupport::FunSupport(){
 
 /* test accuracy */
 bool FunSupport::on_same_line( double dx, double dy, double y2){
-
   if( dx > maxdx) return false;
   return ( dx < mindx || dy < abserr || dy < fabs(y2*relerr) );
 }
