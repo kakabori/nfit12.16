@@ -86,11 +86,11 @@ proc setnfit {} {
 		incr index
 	}
 	if {$flag == 1} {
-		#puts "setNFIT $free(Kc) $free(B) $free(Lr) $free(Mz) $free(D) $free(mosaic) $free(edisp) \
-		 #     $free(beamFWHM) $free(sDistance) $free(bc2b) $free(wavelength)\
-		  #    $free(pixelSize) $free(qxzero) $free(refractiveIndex) $free(T)"
-		setNFIT $free(Kc) $free(B) $free(Lr) $free(Mz) $free(D) $free(mosaic) $free(edisp) \
-	          $free(bFWHM) $free(s) $free(bc2b) $free(wavelength)\
+    puts "setNFIT $free(Kc) $free(B) $free(Lr) $free(Mz) $free(D) $free(mosaic) \
+          $free(edisp) $free(bFWHM) $free(s) $free(bc2b) $free(wavelength) \
+          $free(pixelSize) $free(qxzero) $free(nindex) $free(T)"
+		setNFIT $free(Kc) $free(B) $free(Lr) $free(Mz) $free(D) $free(mosaic) \
+		        $free(edisp) $free(bFWHM) $free(s) $free(bc2b) $free(wavelength)\
 	          $free(pixelSize) $free(qxzero) $free(nindex) $free(T)
 		return TCL_OK
 	} else {

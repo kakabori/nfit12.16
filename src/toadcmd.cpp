@@ -984,6 +984,12 @@ setNFIT
 int setNFIT(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
   int numFreeParams = objc - 1;
+  cout << "#######" <<  endl;
+  for (int i = 0; i < objc; i++) {
+    cout << Tcl_GetString(objv[i]) << endl;
+  }
+  cout << "#######" << endl;
+  cout << "numFreeParams: " << numFreeParams << endl;
   g_ParaStruct.setNfit(interp, objv + 1, numFreeParams);
   return TCL_OK;
 }
