@@ -1,5 +1,5 @@
-#ifndef _YF_FUNSUPPORT_H_
-#define _YF_FUNSUPPORT_H_
+#ifndef GUARD_FUNSUPPORT_H
+#define GUARD_FUNSUPPORT_H
 
 #include <vector>
 #include <gsl/gsl_spline.h>

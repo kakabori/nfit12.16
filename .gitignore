@@ -5,3 +5,5 @@ toad
 createBesselTable/
 mock/
 mydll/test/
+*.o
+*.so

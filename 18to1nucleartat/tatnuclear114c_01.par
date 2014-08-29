@@ -1,0 +1,65 @@
+# NFIT version: nfit12.15
+# Wed Aug 21 04:56:40 PM EDT 2013
+# image filename: /home/kiyo/WinE/Tat_2012/nuclear_tat/18to1nucleartat/tatnuclear114.tif
+# filter = 0.0
+# Kc	free	4.84426e-13	 dataset	: 169 517 800 365 460 550 630
+# B		free	5.3487e+13	 duplicates	: 2
+# Lr		fixed	5000	 cz		: no
+# Mz		fixed	10
+# D		free	63.8133
+# mosaic		free	0.0447821
+# edisp	fixed	0.0134
+# bFWHM		fixed	3.6
+# s		fixed	365.1
+# bc2b		fixed	5.12799
+# wavelength		fixed	1.1775
+# pixelSize		fixed	0.07113
+# qxzero		fixed	508
+# nindex	fixed	0.999998
+# T		fixed	37
+# ChiSquare 5.11867995049
+# lambda 16.4103998094
+# eta 0.0295923623002
+# xi 32.4100936959
+# Iteration 20
+# aFactor 0.2
+#
+set paramArray(Kc) 4.84426e-13
+set paramArray(B) 5.3487e+13
+set paramArray(Lr) 5000
+set paramArray(Mz) 10
+set paramArray(D) 63.8133
+set paramArray(mosaic) 0.0447821
+set paramArray(edisp) 0.0134
+set paramArray(bFWHM) 3.6
+set paramArray(s) 365.1
+set paramArray(bc2b) 5.12799
+set paramArray(wavelength) 1.1775
+set paramArray(pixelSize) 0.07113
+set paramArray(qxzero) 508
+set paramArray(nindex) 0.999998
+set paramArray(T) 37
+set freeOrFixed(Kc) 1
+set freeOrFixed(B) 1
+set freeOrFixed(Lr) 0
+set freeOrFixed(Mz) 0
+set freeOrFixed(D) 1
+set freeOrFixed(mosaic) 1
+set freeOrFixed(edisp) 0
+set freeOrFixed(bFWHM) 0
+set freeOrFixed(s) 0
+set freeOrFixed(bc2b) 0
+set freeOrFixed(wavelength) 0
+set freeOrFixed(pixelSize) 0
+set freeOrFixed(qxzero) 0
+set freeOrFixed(nindex) 0
+set freeOrFixed(T) 0
+set rotation "0 508 951"
+set dataset "169 517 800 365 460 550 630"
+set dupe 2
+set nocz 1
+set noscale 0
+set NKfilter 0.0
+set iter 20
+set aFactor 0.2
+set notiff 0

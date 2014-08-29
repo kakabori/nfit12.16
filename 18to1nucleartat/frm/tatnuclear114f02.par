@@ -1,0 +1,73 @@
+# Wed Aug 21 02:13:45 PM EDT 2013
+# image filename: /home/kiyo/WinE/Tat_2012/nuclear_tat/18to1nucleartat/tatnuclear114.tif
+# filter = 0.0
+# Kc	free	5.828e-13	 dataset	: 169 538 638 300 850
+# B		free	5.282e+13	 duplicates	: 2.0
+# lxctr		fixed	5000.0	 cz		: yes
+# lyctr		fixed	5000.0	 linkxy		: yes
+# mctr		fixed	10.0
+# D		free	64.0090543542
+# mocsig	fixed	0.0
+# edisp		fixed	0.0134
+# bFWHM		fixed	3.6
+# s		fixed	365.1
+# bc2b		fixed	5.12799086369
+# R		fixed	0.0
+# wavelength	fixed	1.1775
+# pz		fixed	0.07113
+# qrzero	fixed	508.0
+# nindex	fixed	0.999998
+# T	fixed	37.0
+# ChiSquare 27.3040670297
+# lambda 16.410388107
+# eta 0.0295923200947
+# xi 32.4100936959
+# Iteration 1
+# aFactor 0.0
+#
+paraset set p Kc 5.828e-13
+paraset set p B 5.282e+13
+paraset set p lxctr 5000.0
+paraset set p lyctr 5000.0
+paraset set p mctr 10.0
+paraset set p D 64.0090543542
+paraset set p mocsig 0.0
+paraset set p edisp 0.0134
+paraset set p bFWHM 3.6
+paraset set p s 365.1
+paraset set p bc2b 5.12799086369
+paraset set p alpha 0.0
+paraset set p R 0.0
+paraset set p wavelength 1.1775
+paraset set p pz 0.07113
+paraset set p qrzero 508.0
+paraset set p nindex 0.999998
+paraset set p T 37.0
+set setnfitt(0) 1
+set setnfitt(1) 1
+set setnfitt(2) 0
+set setnfitt(3) 0
+set setnfitt(4) 0
+set setnfitt(5) 1
+set setnfitt(6) 0
+set setnfitt(7) 0
+set setnfitt(8) 0
+set setnfitt(9) 0
+set setnfitt(10) 0
+set setnfitt(11) 0
+set setnfitt(12) 0
+set setnfitt(13) 0
+set setnfitt(14) 0
+set setnfitt(15) 0
+set setnfitt(16) 0
+set setnfitt(17) 0
+set rotation "0 508 951"
+set dataset "169 538 638 300 850"
+set dupe 2.0
+set nocz 0
+set linkxy 1
+set noscale 0
+set NKfilter 0.0
+set iter 1
+set aFactor 0.0
+set notiff 0
