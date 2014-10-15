@@ -1,6 +1,8 @@
 #ifndef GUARD_GLOBALVARIABLES_H
 #define GUARD_GLOBALVARIABLES_H
 
+#include <tcl.h>
+
 extern double xlow;
 extern double xhigh;
 extern int nocz;
