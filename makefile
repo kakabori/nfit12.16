@@ -17,18 +17,20 @@ BLT = BLT
 CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread -g
 CLINK = -lm -l$(TCL) -l$(TK) -ltiff -l$(BLT) -lpthread -lmydll \
         -lgsl -lgslcblas -Wl,-rpath,. -lalglib
-CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I. -I../ -I/home/kiyo/prog/lib/
+CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I. -I../ -I../lib/ \
+        -I../lib/blt2.4z/src/
+#MACRO = -DUSE_INTERP_RESULT
 
 all: libtoad toad
 
 toad: libtoad
-	gcc $(ODIR)/toad.o $(CPATH) -ltoad_threaded $(CLINK) -o toad 
+	g++ $(ODIR)/toad.o $(CPATH) -ltoad_threaded $(CLINK) -o toad 
 
 libtoad: $(OBJS)
-	$(CC) $(OBJS) $(CFLAGS) $(CPATH) $(CLINK) -shared -o libtoad_threaded.so 
+	$(CC) $(OBJS) $(CFLAGS) $(CPATH) $(CLINK) $(MACRO) -shared -o libtoad_threaded.so 
 
 $(ODIR)/%.o: $(SDIR)/%.cpp $(IDIR)/%.h
-	$(CC) -c $(CPATH) $(CFLAGS) -o $@ $< 
+	$(CC) -c $(CPATH) $(CFLAGS) $(MACRO) -o $@ $< 
 
 clean:
 	rm -f $(ODIR)/*.o libtoad_threaded.so

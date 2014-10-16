@@ -1,6 +1,8 @@
 #ifndef GUARD_TOADCMD_H
 #define GUARD_TOADCMD_H
 
+//#define USE_INTERP_RESULT
+
 int YF_DSfitting(ClientData clientData, Tcl_Interp *interp,int objc, Tcl_Obj *const objv[]);
 int YF_nfitdata(ClientData clientData, Tcl_Interp *interp,int objc, Tcl_Obj *const objv[]);
 int YF_fitdata(ClientData clientData, Tcl_Interp *interp,int objc, Tcl_Obj *const objv[]);
