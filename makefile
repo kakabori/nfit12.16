@@ -17,9 +17,8 @@ BLT = BLT
 CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread -g
 CLINK = -lm -l$(TCL) -l$(TK) -ltiff -l$(BLT) -lpthread -lmydll \
         -lgsl -lgslcblas -Wl,-rpath,. -lalglib
-CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I. -I../ -I../lib/ \
-        -I../lib/blt2.4z/src/
-#MACRO = -DUSE_INTERP_RESULT
+CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I. -I../ 
+
 
 all: libtoad toad
 
