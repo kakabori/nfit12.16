@@ -15,7 +15,7 @@ using namespace std;
 void createCCDStrFct()
 {
   ModelCalculator mc;
-	mc.read_in_utable("../dat/utab_nfit12.15.dat");
+  mc.read_in_utable("../dat/utab_nfit12.15.dat");
 	
   // Do not change the following parameters
 	mc.setModelParameter(6e-13, "Kc");
@@ -325,17 +325,17 @@ void testConvolveMosaic()
 {
   ModelCalculator mc;
   mc.setModelParameter(6e-13, "Kc");
-	mc.setModelParameter(2e13, "B");
-	mc.setModelParameter(62.8, "D");
-	mc.setModelParameter(37, "T");
-	mc.setModelParameter(5000, "Lr");
-	mc.setModelParameter(10, "Mz");
-	mc.setModelParameter(0.0134, "edisp");
-	mc.setModelParameter(0.1, "mosaic");
-	mc.setModelParameter(1.175, "wavelength");
-	mc.setModelParameter(0.07113, "pixelSize");
-	mc.setModelParameter(2.3, "bFWHM");
-	mc.setModelParameter(360, "s");
+  mc.setModelParameter(2e13, "B");
+  mc.setModelParameter(62.8, "D");
+  mc.setModelParameter(37, "T");
+  mc.setModelParameter(5000, "Lr");
+  mc.setModelParameter(10, "Mz");
+  mc.setModelParameter(0.0134, "edisp");
+  mc.setModelParameter(0.1, "mosaic");
+  mc.setModelParameter(1.175, "wavelength");
+  mc.setModelParameter(0.07113, "pixelSize");
+  mc.setModelParameter(2.3, "bFWHM");
+  mc.setModelParameter(360, "s");
 	
   mc.read_struct_factor("structure_factor.dat");
   
