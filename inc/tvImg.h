@@ -429,6 +429,60 @@ int TVImg<T>::exportTiff(char *file){
   return TCL_OK;
 }
 
+template<class T> 
+inline int _xplot(T *ptr, double *xp, double *yp, int width, int height, int y, int xstart, int xswath){
+  /* helper
+     prepare for plot x crossections
+   */
+  if (descending == 0) y = height - y -1;
+  if (y<xswath || y >= height-xswath) return 0;
+  ptr+=width*y;
+  int i=0;
+  int jlow  = yfmax((int)xlow - xstart, 0);
+  int jhigh = yfmin((int)xhigh - xstart, width);
+  for(int j=jlow; j<jhigh; j++, i++){
+    yp[i]=0;
+    for(int k=-xswath;k<=xswath;k++){
+      yp[i]+=ptr[j+k*width];
+    }
+    yp[i]/=(1+2*xswath);
+    xp[i]=xstart+j;
+  }
+  return jhigh-jlow;
+}
+
+template<class T> inline 
+int _yplot(T *ptr, double *xp, double *yp, int width, int height, int x, int ystart, int yswath){
+  /* helper
+
+     prepare for plot y crossections
+   */
+  if (x<yswath ||x >= width-yswath) return 0;
+  ptr+=x;
+  int i=0;
+  int jlow  = yfmax((int)xlow - ystart, 0);
+  int jhigh = yfmin((int)xhigh - ystart, height);
+  if(descending == 0) {
+    for(int j=jlow; j<jhigh; j++, i++){
+      yp[i]=0;
+      for(int k=-yswath;k<=yswath;k++){
+	yp[i]+=ptr[k+(height-j-1)*width];
+      }
+      yp[i]/=(1+2*yswath);
+      xp[i]=ystart+j;
+    }
+  } else {
+    for(int j=jlow; j<jhigh; j++, i++){
+      yp[i]=0;
+      for(int k=-yswath;k<=yswath;k++){
+	yp[i]+=ptr[k+j*width];
+      }
+      yp[i]/=(1+2*yswath);
+      xp[i]=ystart+j;
+    }
+  }
+  return jhigh-jlow;
+}
 
 template<class T>
 void TVImg<T>::plotCrossSection(int x, int y, int opt){
@@ -572,59 +626,7 @@ inline void _ppmline(T *dataPtr, ColorT* pixelPtr, int sz, ColorSetup* csetupPtr
   }
 }
 
-template<class T> 
-inline int _xplot(T *ptr, double *xp, double *yp, int width, int height, int y, int xstart, int xswath){
-  /* helper
-     prepare for plot x crossections
-   */
-  if (descending == 0) y = height - y -1;
-  if (y<xswath || y >= height-xswath) return 0;
-  ptr+=width*y;
-  int i=0;
-  int jlow  = yfmax((int)xlow - xstart, 0);
-  int jhigh = yfmin((int)xhigh - xstart, width);
-  for(int j=jlow; j<jhigh; j++, i++){
-    yp[i]=0;
-    for(int k=-xswath;k<=xswath;k++){
-      yp[i]+=ptr[j+k*width];
-    }
-    yp[i]/=(1+2*xswath);
-    xp[i]=xstart+j;
-  }
-  return jhigh-jlow;
-}
 
-template<class T> inline 
-int _yplot(T *ptr, double *xp, double *yp, int width, int height, int x, int ystart, int yswath){
-  /* helper
-     prepare for plot y crossections
-   */
-  if (x<yswath ||x >= width-yswath) return 0;
-  ptr+=x;
-  int i=0;
-  int jlow  = yfmax((int)xlow - ystart, 0);
-  int jhigh = yfmin((int)xhigh - ystart, height);
-  if(descending == 0) {
-    for(int j=jlow; j<jhigh; j++, i++){
-      yp[i]=0;
-      for(int k=-yswath;k<=yswath;k++){
-	yp[i]+=ptr[k+(height-j-1)*width];
-      }
-      yp[i]/=(1+2*yswath);
-      xp[i]=ystart+j;
-    }
-  } else {
-    for(int j=jlow; j<jhigh; j++, i++){
-      yp[i]=0;
-      for(int k=-yswath;k<=yswath;k++){
-	yp[i]+=ptr[k+j*width];
-      }
-      yp[i]/=(1+2*yswath);
-      xp[i]=ystart+j;
-    }
-  }
-  return jhigh-jlow;
-}
 
 
 template<class T>

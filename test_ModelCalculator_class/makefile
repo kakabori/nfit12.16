@@ -17,7 +17,7 @@ BLT = BLT
 CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread
 CLINK = -lm -l$(TCL) -l$(TK) -l$(BLT) -lpthread -lalglib\
         -lgsl -lgslcblas -Wl,-rpath,.
-CPATH = -I/usr/include/$(TCL) -I$(IDIR) -I../../ -L../
+CPATH = -I/usr/include/$(TCL) -I$(IDIR) -I../../ -L../ -I../
 
 all: test_ModelCalculator_class
 

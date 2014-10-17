@@ -22,7 +22,7 @@ CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I. -I../
 all: libtoad toad
 
 toad: libtoad
-	gcc $(ODIR)/toad.o $(CPATH) -ltoad_threaded $(CLINK) -o toad 
+	$(CC) $(ODIR)/toad.o $(CPATH) -ltoad_threaded $(CLINK) -o toad 
 
 libtoad: $(OBJS)
 	$(CC) $(OBJS) $(CFLAGS) $(CPATH) $(CLINK) -shared -o libtoad_threaded.so 

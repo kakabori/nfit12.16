@@ -10,7 +10,7 @@ IDIR = ../inc
 #CFLAGS = -Wall -O0 -ffast-math -fPIC -lpthread -g
 CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread
 CLINK = -lm -lpthread -lalglib -lgsl -lgslcblas -Wl,-rpath,.
-CPATH = -I$(IDIR) -I../../ -L../
+CPATH = -I$(IDIR) -I../../ -L../ -I../
 
 all: test_Alglib_CubicSpline2D_class
 
