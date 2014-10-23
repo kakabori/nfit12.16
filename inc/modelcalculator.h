@@ -100,14 +100,14 @@ public:
 private:
   double Kc, B, dspacing, T;
   double avgLr, avgMz;
-	double edisp;
-	double mosaic;
+  double edisp;
+  double mosaic;
   double wavelength, pixelSize, bFWHM, sdistance, beamSigma;
 
   // cutoff for r integration and sum over n
   double cutoff_r, cutoff_n;
-	// qz value for the qx slice
-	double qz;
+  // qz value for the qx slice
+  double qz;
   // gsl workspace
   gsl_integration_workspace *workspace;
   // interpolation support object for sum over n
@@ -125,7 +125,7 @@ private:
   Utable utable;
   double curr_r, currtheta, currqx, currq, currqr;
   
-	// should be called after parameters are changed. considered as updater
+  // should be called after parameters are changed. considered as updater
   void avgLrChanged();
   void avgMzChanged();
   void set_eta_lambda();

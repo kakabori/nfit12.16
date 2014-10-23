@@ -24,10 +24,10 @@ struct Two_Doubles {
 
 class FunSupport {
 public:
-	enum SplineType_Enum {
-		enum_linear,
-		enum_cubic
-	};
+  enum SplineType_Enum {
+    enum_linear,
+    enum_cubic
+  };
   FunSupport();
   void setSplineTypeToLinear() {type = enum_linear;}
   void setSplineTypeToCubic() {type = enum_cubic;}
@@ -38,9 +38,9 @@ public:
   void init(double (*f)(double, void*), void *p){func=f;para=p;}
   void setol(double a, double r, double m1, double m2){abserr=a; relerr=r; mindx=m1; maxdx=m2;}
   double val(double);
-	void getPoints(std::vector<double>&, std::vector<double>&);
-	double get_lower_bound() {return xmin;}
-	double get_upper_bound() {return xmax;}
+  void getPoints(std::vector<double>&, std::vector<double>&);
+  double get_lower_bound() {return xmin;}
+  double get_upper_bound() {return xmax;}
 private:
   double maxdx; // maximum seperation between neighbouring points
   double mindx; // minimum seperation between neighbouring points
