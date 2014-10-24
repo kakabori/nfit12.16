@@ -904,6 +904,39 @@ void ModelCalculator::getMosaicStrFct(double qrlow, double qrhigh,
 }
                                       
 
+// Calculate bare structure factor, without mosaic spread or resolution function
+// convolution. Return S(qr,qz) in qrv, qzv, and sfv vectors.
+// sfv.size() = qrv.size() * qzv.size()
+void ModelCalculator::getBareStrFct(double qrmin, double qrmax, double deltaqr,
+                                    double qzmin, double qzmax, double deltaqz,
+                                    vector<double>& qrv,
+                                    vector<double>& qzv,
+                                    vector<double>& sfv)
+{
+  if (qzmin < QZMIN) {
+    qzmin = QZMIN;
+  }
+  init(qrmin, qrmax, qzmin, qzmax);
+  
+  for (double qr = qrmin; qr < qrmax + 0.5*deltaqr; ) {
+    qrv.push_back(qr);
+    qr += deltaqr;
+  }
+  for (double qz = qzmin; qz < qzmax + 0.5*deltaqz; ) {
+    qzv.push_back(qz);
+    qz += deltaqz;
+  }  
+  
+  typedef vector<double>::size_type vec_sz;
+  for (vec_sz i = 0; i < qzv.size(); i++) {
+    for (vec_sz j = 0; j < qrv.size(); j++) {
+      sfv.push_back(algStrFct.evaluate(qrv[j], qzv[i]));
+    }
+  }
+}
+
+
+// function name is misleading
 void ModelCalculator::get2DStrFct(double qrlow, double qrhigh , double _qz,
                                   vector<double>& qrv, vector<double>& sfv)
 {

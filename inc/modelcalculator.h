@@ -97,6 +97,8 @@ public:
   void getCCDStrFct(double, double, double, std::vector<double>&, std::vector<double>&);
   void read_struct_factor(const char *);
   double evalStrFct(double, double);
+  void getBareStrFct(double, double, double, double, double, double, 
+                     std::vector<double>&, std::vector<double>&, std::vector<double>&);
 private:
   double Kc, B, dspacing, T;
   double avgLr, avgMz;

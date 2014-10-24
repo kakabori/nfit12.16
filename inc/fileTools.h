@@ -22,6 +22,10 @@ void saveMatrix(std::vector<double>&, std::vector<double>&,
 void saveMatrix(unsigned int, unsigned int, std::vector<double>&, const char *);
 void saveThreeVectorsToFile(std::vector<double>&, std::vector<double>&,
                             std::vector<double>&, const char *);
+void saveAsColumnVectors(std::vector<double>&, std::vector<double>&, 
+                            std::vector<double>&, const char *);
+void saveAsRowVectors(std::vector<double>&, std::vector<double>&, const char *);
+void saveRowVector(std::vector<double>&, const char *);
 
 /******************************************************************************
 Read an ASCII formatted matrix into the input 1D vector, vec. 
