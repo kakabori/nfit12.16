@@ -68,17 +68,17 @@ to extend down to t = 0.
 ******************************************************************************/
 double Utable::calculateIntegration(int n, double t)
 {
-	double result, abserr, epsabs = 0, epsrel = 1e-10;
-	_n = n;
-	_t = t;
-	gsl_function F;
-	F.function = &s_integrandWrapper;
-	F.params = this;
+  double result, abserr, epsabs = 0, epsrel = 1e-10;
+  _n = n;
+  _t = t;
+  gsl_function F;
+  F.function = &s_integrandWrapper;
+  F.params = this;
   double lowerLimit = 1e-10;
   double upperLimit = 1e10;
-	//gsl_integration_qagiu(&F, 1e-10, epsabs, epsrel, WORKSPACE_SIZE,
-	//                      workspace, &result, &abserr);
-	gsl_integration_qag(&F, lowerLimit, upperLimit, epsabs, epsrel,
+  //gsl_integration_qagiu(&F, 1e-10, epsabs, epsrel, WORKSPACE_SIZE,
+  //                      workspace, &result, &abserr);
+  gsl_integration_qag(&F, lowerLimit, upperLimit, epsabs, epsrel,
                       WORKSPACE_SIZE, KEY, workspace, &result, &abserr);
   return result;
 }
@@ -86,19 +86,19 @@ double Utable::calculateIntegration(int n, double t)
 
 double Utable::s_integrandWrapper(double x, void *param)
 {
-	Utable *p = (Utable *)param;
+  Utable *p = (Utable *)param;
   return p->integrand(x);
 }
 
 
 double Utable::integrand(double x)
 {
-	double ret;
-	ret = bessel_J0(sqrt(2 * x) * _t);
-	ret = ret * pow(sqrt(1 + x * x) - x, 2 * _n);
-	ret = 1 - ret;
-	ret = ret / x / sqrt(1 + x * x);
-	return ret;
+  double ret;
+  ret = bessel_J0(sqrt(2 * x) * _t);
+  ret = ret * pow(sqrt(1 + x * x) - x, 2 * _n);
+  ret = 1 - ret;
+  ret = ret / x / sqrt(1 + x * x);
+  return ret;
 }
 
 
@@ -279,8 +279,8 @@ void Utable::readUtableFile(const char *filename)
 	// read line by line, build an interpolant, and then store
 	vector<double> y;
 	gsl_interp_accel *acc;
-  gsl_spline *spline;
-	while (getline(myfile, line)) {
+    gsl_spline *spline;
+    while (getline(myfile, line)) {
 		istringstream iss(line);
 		while (iss >> d) {
 			y.push_back(d);

@@ -1,0 +1,3 @@
+/usr/local/lib/libinterp2d.a
+/usr/local/include/interp2d.h
+/usr/local/include/interp2d_spline.h

@@ -1,0 +1,1 @@
+/usr/bin/cc      CMakeFiles/interp2dtest.dir/test.c.o  -o interp2dtest -rdynamic libinterp2d.a -lgsl -lgslcblas -lm -lm 

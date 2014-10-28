@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/unkokusei/prog/nfit12.16/interp2d/interp2d.h
+gsl/gsl_interp.h
+-
+
+/home/unkokusei/prog/nfit12.16/interp2d/interp2d_spline.h
+gsl/gsl_interp.h
+-
+interp2d.h
+/home/unkokusei/prog/nfit12.16/interp2d/interp2d.h
+
+/home/unkokusei/prog/nfit12.16/interp2d/test.c
+math.h
+-
+gsl/gsl_errno.h
+-
+gsl/gsl_ieee_utils.h
+-
+gsl/gsl_test.h
+-
+interp2d.h
+/home/unkokusei/prog/nfit12.16/interp2d/interp2d.h
+interp2d_spline.h
+/home/unkokusei/prog/nfit12.16/interp2d/interp2d_spline.h
+

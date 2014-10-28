@@ -241,8 +241,6 @@ void ModelCalculator::buildInterpForStrFct(double qrMin, double qrMax,
   vector<double> qrvec;
   vector<double> qzvec;
   vector<double> qrqzStrFctvec;
-  
-  //cout << qrMin << " " << qrMax << " " << qzMin << " " << qzMax << endl;
 
   for (double qr = qrMin; qr < qrMax+QRSTEP;) {
     qrvec.push_back(qr);
@@ -255,16 +253,11 @@ void ModelCalculator::buildInterpForStrFct(double qrMin, double qrMax,
   
   typedef vector<double>::size_type sz;
   for (sz i = 0; i < qzvec.size(); i++) {
-    //cout << "Working on qz = " << qzvec[i] << " ..." << endl;
     qrSlice(qrvec.back(), qzvec[i]);
     for (sz j = 0; j < qrvec.size(); j++) {
       qrqzStrFctvec.push_back(exp(spStrFct.val(log(fabs(qrvec[j])+SMALLNUM))));
     }
   }
-
-  //saveThreeVectorsToFile(qrvec, qzvec, qrqzStrFctvec, "structure_factor.dat");
-  //saveMatrix(qrvec.size(), qzvec.size(), qrqzStrFctvec, "qrqzStrFct.dat");
-  //saveMatrix(qrvec, qzvec, qrqzStrFctvec, "structure_factor.ssg");
   
   algStrFct.buildInterpolant(qrvec, qzvec, qrqzStrFctvec);  
 }
@@ -916,8 +909,9 @@ void ModelCalculator::getBareStrFct(double qrmin, double qrmax, double deltaqr,
   if (qzmin < QZMIN) {
     qzmin = QZMIN;
   }
-  init(qrmin, qrmax, qzmin, qzmax);
+  init(qrmin, qrmax+deltaqr, qzmin, qzmax);
   
+  // adding 0.5 make sure to include qrmax
   for (double qr = qrmin; qr < qrmax + 0.5*deltaqr; ) {
     qrv.push_back(qr);
     qr += deltaqr;
@@ -930,7 +924,7 @@ void ModelCalculator::getBareStrFct(double qrmin, double qrmax, double deltaqr,
   typedef vector<double>::size_type vec_sz;
   for (vec_sz i = 0; i < qzv.size(); i++) {
     for (vec_sz j = 0; j < qrv.size(); j++) {
-      sfv.push_back(algStrFct.evaluate(qrv[j], qzv[i]));
+      sfv.push_back(algStrFct.evaluate(fabs(qrv[j]), qzv[i]));
     }
   }
 }

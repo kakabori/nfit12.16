@@ -1,4 +1,4 @@
-_OBJS =	funsupport.o globalVariables.o modelcalculator.o Para.o \
+_OBJS =	funsupport.o globalVariables.o BareStructureFactor.o Para.o \
         alglib_interpolation.o tvds.o utable.o fileTools.o \
         create_structure_factor.o
 
@@ -29,7 +29,7 @@ $(ODIR)/%.o: $(SDIR)/%.cpp $(IDIR)/%.h
 
 clean:
 	rm -f $(ODIR)/funsupport.o $(ODIR)/globalVariables.o \
-	      $(ODIR)/modelcalculator.o $(ODIR)/Para.o $(ODIR)/tvds.o \
+	      $(ODIR)/BareStructureFactor.o $(ODIR)/Para.o $(ODIR)/tvds.o \
 	      $(ODIR)/utable.o $(ODIR)/fileTools.o \
 	      $(ODIR)/create_structure_factor.o \
 	      $(ODIR)/alglib_interpolation.o

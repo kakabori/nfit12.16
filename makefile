@@ -14,10 +14,11 @@ TCL = tcl8.4
 TK = tk8.4
 BLT = BLT
 
-CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread -g
+CFLAGS = -Wall -O3 -ffast-math -fPIC -g
 CLINK = -lm -l$(TCL) -l$(TK) -ltiff -l$(BLT) -lpthread -lmydll \
-        -lgsl -lgslcblas -Wl,-rpath,. -lalglib
-CPATH = -I/usr/include/$(TCL) -I./$(IDIR) -L. -I. -I../ 
+        -lgsl -lgslcblas -Wl,-rpath,. -lalglib -linterp2d -lpthread
+CPATH = -I/usr/include/$(TCL) -I/usr/local/include -I./$(IDIR) -I. -I../ \
+        -L/usr/local/lib -L.
 
 all: libtoad toad
 

@@ -1,0 +1,2 @@
+/usr/bin/ar cr libinterp2d.a  CMakeFiles/interp2d.dir/bilinear.c.o CMakeFiles/interp2d.dir/bicubic.c.o CMakeFiles/interp2d.dir/interp2d.c.o CMakeFiles/interp2d.dir/interp2d_spline.c.o
+/usr/bin/ranlib libinterp2d.a

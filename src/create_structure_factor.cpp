@@ -1,6 +1,6 @@
-#include "nfit.h"
-#include "modelcalculator.h"
-#include "utable.h"
+//#include "nfit.h"
+#include "BareStructureFactor.h"
+//#include "utable.h"
 #include "fileTools.h"
 #include <gsl/gsl_sf_bessel.h>
 #include <iostream>
@@ -16,11 +16,12 @@ using namespace std;
 #define SMALLNUM 0.00000000001
 
 
+// dqr and dqz are step size
 void createStructureFactor(double Kc, double B, double D, double T, double Lr,
                            double Mz, double qrmin, double qrmax, double dqr,
                            double qzmin, double qzmax, double dqz)
 {
-  ModelCalculator mc;
+  BareStructureFactor mc;
   mc.read_in_utable("../dat/utab_nfit12.15.dat");  
   mc.setModelParameter(Kc, "Kc");
   mc.setModelParameter(B, "B");
@@ -30,7 +31,6 @@ void createStructureFactor(double Kc, double B, double D, double T, double Lr,
   mc.setModelParameter(Mz, "Mz"); 
   mc.setModelParameter(0, "mosaic");
   mc.setModelParameter(0, "edisp");
-  mc.setModelParameter(0, "bFWHM");
   
   vector<double> qrvec, qzvec, sfvec;
   mc.getBareStrFct(qrmin, qrmax, dqr, qzmin, qzmax, dqz, qrvec, qzvec, sfvec);
@@ -64,11 +64,11 @@ int main()
   double T = getInput("Enter T [default: 30]: ", 30);
   double Lr = getInput("Enter Lr [default: 2500]: ", 2500);
   double Mz = getInput("Enter Mz [default: 10]: ", 10);
-  double qrmin = getInput("Enter qr min [default: 0]: ", 0);
+  double qrmin = getInput("Enter qr min [default: -0.1]: ", -0.1);
   double qrmax = getInput("Enter qr max [default: 0.1]: ", 0.1);
   double dqr = getInput("Enter delta qr [default: 0.001]: ", 0.001);
-  double qzmin = getInput("Enter qz min (must be >= 0.001) [default: 0.1]: ", 0.1);
-  double qzmax = getInput("Enter qz max [default: 0.2]: ", 0.2);
+  double qzmin = getInput("Enter qz min (must be >= 0.001) [default: 0.05]: ", 0.05);
+  double qzmax = getInput("Enter qz max [default: 0.25]: ", 0.25);
   double dqz = getInput("Enter delta qz [default: 0.001]: ", 0.001);
   
   createStructureFactor(Kc, B, D, T, Lr, Mz, 

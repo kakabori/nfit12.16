@@ -26,18 +26,18 @@ extern double g_spMosaicAbserr;
 extern double g_spMosaicRelerr;
 extern double g_spMosaicMindx;
 extern double g_spMosaicMaxdx;
-extern double g_spStrFctAbserr;
-extern double g_spStrFctRelerr;
-extern double g_spStrFctMindx;
-extern double g_spStrFctMaxdx;
-extern double g_spsumnAbserr;
-extern double g_spsumnRelerr;
-extern double g_spsumnMindx;
-extern double g_spsumnMaxdx;
-extern double g_spHrAbserr;
-extern double g_spHrRelerr;
-extern double g_spHrMindx;
-extern double g_spHrMaxdx;
+extern double g_interp1dStrFctAbserr;
+extern double g_interp1dStrFctRelerr;
+extern double g_interp1dStrFctMindx;
+extern double g_interp1dStrFctMaxdx;
+extern double g_interp1dsumnAbserr;
+extern double g_interp1dsumnRelerr;
+extern double g_interp1dsumnMindx;
+extern double g_interp1dsumnMaxdx;
+extern double g_interp1dHrAbserr;
+extern double g_interp1dHrRelerr;
+extern double g_interp1dHrMindx;
+extern double g_interp1dHrMaxdx;
 
 
 //For qag routine

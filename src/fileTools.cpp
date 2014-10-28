@@ -157,7 +157,7 @@ void saveRowVector(vector<double>& v, const char *filename)
   myfile.open(filename);
   typedef vector<double>::size_type vec_sz;
   for (vec_sz i = 0; i < v.size(); i++) {
-    myfile << i+1 << " ";
+    myfile << i << " ";
   }
   myfile << endl;
   for (vec_sz i = 0; i < v.size(); i++) {
