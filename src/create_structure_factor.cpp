@@ -32,13 +32,18 @@ void createStructureFactor(double Kc, double B, double D, double T, double Lr,
   mc.setModelParameter(0, "mosaic");
   mc.setModelParameter(0, "edisp");
   
-  vector<double> qrvec, qzvec, sfvec;
+  vector<double> qrvec, qzvec, sfvec, xvec, yvec;
   mc.getBareStrFct(qrmin, qrmax, dqr, qzmin, qzmax, dqz, qrvec, qzvec, sfvec);
 	
   saveMatrix(qrvec, qzvec, sfvec, "columns.dat");
   saveMatrix(qrvec.size(), qzvec.size(), sfvec, "matrix.dat");  
   saveRowVector(qrvec, "qr.dat");
   saveRowVector(qzvec, "qz.dat");
+  
+  for (int i = 0; i < qrvec.size(); i++) xvec.push_back(i);
+  saveDoubleColumns(xvec, qrvec, "qr.dat");
+  for (int i = 0; i < qzvec.size(); i++) yvec.push_back(i);
+  saveDoubleColumns(yvec, qzvec, "qz.dat");
 }
 
 // s is the string that gets displayed
@@ -59,16 +64,16 @@ double getInput(string s, double x)
 int main()
 {
   double Kc = getInput("Enter Kc [default: 6e-13]: ", 6e-13);
-  double B = getInput("Enter B [default: 2e13: ", 2e13);
+  double B = getInput("Enter B [default: 2e13]: ", 2e13);
   double D = getInput("Enter D [default: 62.8]: ", 62.8);
   double T = getInput("Enter T [default: 30]: ", 30);
   double Lr = getInput("Enter Lr [default: 2500]: ", 2500);
   double Mz = getInput("Enter Mz [default: 10]: ", 10);
-  double qrmin = getInput("Enter qr min [default: -0.1]: ", -0.1);
-  double qrmax = getInput("Enter qr max [default: 0.1]: ", 0.1);
+  double qrmin = getInput("Enter qr min [default: -0.05]: ", -0.05);
+  double qrmax = getInput("Enter qr max [default: 0.05]: ", 0.05);
   double dqr = getInput("Enter delta qr [default: 0.001]: ", 0.001);
   double qzmin = getInput("Enter qz min (must be >= 0.001) [default: 0.05]: ", 0.05);
-  double qzmax = getInput("Enter qz max [default: 0.25]: ", 0.25);
+  double qzmax = getInput("Enter qz max [default: 0.45]: ", 0.45);
   double dqz = getInput("Enter delta qz [default: 0.001]: ", 0.001);
   
   createStructureFactor(Kc, B, D, T, Lr, Mz, 
