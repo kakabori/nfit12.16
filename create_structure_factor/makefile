@@ -14,7 +14,7 @@ TK = tk8.4
 BLT = BLT
 
 #CFLAGS = -Wall -O0 -ffast-math -fPIC -lpthread -g
-CFLAGS = -Wall -O3 -ffast-math -fPIC -lpthread
+CFLAGS = -Wall -O3 -ffast-math -fPIC -std=c++0x
 CLINK = -lm -l$(TCL) -l$(TK) -l$(BLT) -lpthread -lalglib\
         -lgsl -lgslcblas -Wl,-rpath,.
 CPATH = -I/usr/include/$(TCL) -I$(IDIR) -I../../ -L../ -I../
